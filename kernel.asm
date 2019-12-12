@@ -32,6 +32,7 @@ global load_idt
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
+extern timer_handler_main
 
 read_port:
 	mov edx, [esp + 4]
@@ -54,6 +55,13 @@ load_idt:
 keyboard_handler:
 	pusha
 	call    keyboard_handler_main
+	popa
+	iretd
+
+
+timer_handler:
+	pusha
+	call    timer_handler_main
 	popa
 	iretd
 
