@@ -37,6 +37,7 @@ extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
 extern timer_handler_main
 extern kernel_panic
+extern DBLFLT_handler_main
 
 read_port:
 	mov edx, [esp + 4]
@@ -96,7 +97,9 @@ DEVICE_handler:
 	iret
 
 DBLFLT_handler:
-	jmp DBLFLT_handler
+	pusha
+	call DBLFLT_handler_main
+	popa
 	iret
 
 TSS_handler:

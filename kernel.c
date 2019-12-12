@@ -69,6 +69,12 @@ void kernel_panic()
 	while(1);
 }
 
+void DBLFLT_handler_main()
+{
+	kprint("double fault!!");
+	while(1);
+}
+
 int panic(){
 	int a = 3 / 0;
 }
@@ -95,6 +101,7 @@ void kmain(void)
 		kprint_newline();
 	}
 
+	panic();
 
 	interactive();
 }
