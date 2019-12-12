@@ -1,6 +1,7 @@
 #include "keyboard_map.h"
-#include "printer.h"
+#include "io.h"
 #include "timer.h"
+#include "fifo.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_STATUS_PORT 0x64
@@ -22,6 +23,7 @@ extern void read_gdt(char *);
 extern char* vidptr;
 extern unsigned int current_loc;
 char *gdt_entry;
+struct fifo32 iobuf;
 
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
@@ -164,6 +166,8 @@ void kmain(void)
 		dump4bytes(gdt_entry + i * 4);
 		kprint_newline();
 	}
+
+
 
 	while(1);
 }
