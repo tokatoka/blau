@@ -13,8 +13,7 @@
 unsigned int tick = 0;
 
 extern unsigned char keyboard_map[128];
-extern void keyboard_handler(void);
-extern void timer_handler(void);
+
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
@@ -64,6 +63,15 @@ void disable_cursor()
 	write_port(0x3D5, 0x20);
 }
 
+void kernel_panic()
+{
+	kprint("kernel panic!!! halting!");
+	while(1);
+}
+
+int panic(){
+	int a = 3 / 0;
+}
 
 void kmain(void)
 {

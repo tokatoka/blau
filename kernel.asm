@@ -36,6 +36,7 @@ global SIMDERR_handler
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
 extern timer_handler_main
+extern kernel_panic
 
 read_port:
 	mov edx, [esp + 4]
@@ -61,7 +62,9 @@ read_gdt:
 	ret
 
 DIVIDE_handler:
-	jmp DIVIDE_handler
+	pusha
+	call kernel_panic
+	popa
 	iret
 
 DEBUG_handler:
