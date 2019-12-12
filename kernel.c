@@ -91,7 +91,16 @@ void test_mem(multiboot_info *info){
 	kprint_newline();
 
 	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
-		kprintn("found one!");
+		kprint("range");
+		kput_char(' ');
+		kprint_hex(mmap -> base_addr_low);
+		kput_char(' ');
+		kprint_hex(mmap -> length_low);
+		kput_char(' ');
+		kprint("type");
+		kput_char(' ');
+		kprint_hex(mmap -> type);
+		kprint_newline();
 	}
 
 
@@ -111,6 +120,7 @@ void kmain(unsigned long magic,multiboot_info *info)
 
 	idt_init();
 	allow_intr();
+
 
 	interactive();
 }
