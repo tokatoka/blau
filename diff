@@ -1,0 +1,311 @@
+diff --git a/Makefile b/Makefile
+index 7e6aff4..24fe1cf 100644
+--- a/Makefile
++++ b/Makefile
+@@ -4,7 +4,9 @@ build: kernel.c kernel.asm link.ld
+ 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c io.c -o io.o
+ 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c timer.c -o timer.o
+ 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c fifo.c -o fifo.o
+-	ld -m elf_i386 -T link.ld -o blau kasm.o kc.o io.o timer.o fifo.o
++	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c util.c -o util.o
++	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c idt.c -o idt.o
++	ld -m elf_i386 -T link.ld -o blau kasm.o kc.o io.o timer.o fifo.o util.o idt.o
+ 
+ run: blau
+ 	qemu-system-i386 -kernel blau
+diff --git a/idt.c b/idt.c
+index 2639ec6..ba09e41 100644
+--- a/idt.c
++++ b/idt.c
+@@ -1,5 +1,6 @@
+ #define IDT_SIZE 256
+-#define INTERRUPT_GATE 0x8e
++#define INTERRUPT_GATE_DPL0 0x8e
++#define TRAP_GATE_DPL0 0x8f
+ #define KERNEL_CODE_SEGMENT_OFFSET 0x08
+ 
+ #define IOADR_PIT_COUNTER0	0x0040
+@@ -9,7 +10,7 @@
+ #define IOADR_PIT_CONTROL_WORD_BIT_MODE2		0x04
+ 
+ #include "./io.h"
+-
++#include "timer.h"
+ struct IDT_entry {
+ 	unsigned short int offset_lowerbits;
+ 	unsigned short int selector;
+@@ -20,46 +21,82 @@ struct IDT_entry {
+ 
+ struct IDT_entry IDT[IDT_SIZE];
+ 
++extern void write_port(unsigned short port, unsigned char data);
++
++
+ extern void keyboard_handler(void);
+ extern void timer_handler(void);
++
++extern void DIVIDE_handler(void);
++extern void DEBUG_handler(void);
++extern void NMI_handler(void);
++extern void BPKPT_handler(void);
++extern void OVLOW_handler(void);
++extern void BOUND_handler(void);
++extern void ILLOP_handler(void);
++extern void DEVICE_handler(void);
++extern void DBLFLT_handler(void);
++extern void TSS_handler(void);
++extern void SEGNP_handler(void);
++extern void STACK_handler(void);
++extern void GPFLT_handler(void);
++extern void PGFLT_handler(void);
++extern void FPERR_handler(void);
++extern void ALIGN_handler(void);
++extern void MCHK_handler(void);
++extern void SIMDERR_handler(void);
++
++
++
+ extern void load_idt(unsigned long *idt_ptr);
+ extern void kprint(const char *);
+ 
+-void timer_init(void)
+-{
+-	/* Setup PIT */
+-	outb_p(IOADR_PIT_CONTROL_WORD_BIT_COUNTER0
+-	       | IOADR_PIT_CONTROL_WORD_BIT_16BIT_READ_LOAD
+-	       | IOADR_PIT_CONTROL_WORD_BIT_MODE2, IOADR_PIT_CONTROL_WORD);
+-	/* 割り込み周期11932(0x2e9c)サイクル(=100Hz、10ms毎)に設定 */
+-	outb_p(0x9c, IOADR_PIT_COUNTER0);
+-	outb_p(0x2e, IOADR_PIT_COUNTER0);
++void set_idtdesc(unsigned int idx,char *handler_addr,unsigned short int sel,unsigned char type){
++	unsigned long addr = (unsigned long)handler_addr;
++	IDT[idx].offset_lowerbits = addr & 0xffff;
++	IDT[idx].selector = sel;
++	IDT[idx].zero = 0;
++	IDT[idx].type_attr = type;
++	IDT[idx].offset_higherbits = (addr & 0xffff0000) >> 16;
+ }
+ 
+ 
+-
+ void idt_init(void)
+ {
+-	unsigned long keyboard_address;
+-	unsigned long timer_address;
+ 	unsigned long idt_address;
+ 	unsigned long idt_ptr[2];
+ 
++
+ 	/* populate IDT entry of keyboard's interrupt */
+-	keyboard_address = (unsigned long)keyboard_handler;
+-	timer_address = (unsigned long)timer_handler;
+-	IDT[0x21].offset_lowerbits = keyboard_address & 0xffff;
+-	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
+-	IDT[0x21].zero = 0;
+-	IDT[0x21].type_attr = INTERRUPT_GATE;
+-	IDT[0x21].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
+ 
+ 
+-	IDT[0x20].offset_lowerbits = timer_address & 0xffff;
+-	IDT[0x20].selector = KERNEL_CODE_SEGMENT_OFFSET;
+-	IDT[0x20].zero = 0;
+-	IDT[0x20].type_attr = INTERRUPT_GATE;
+-	IDT[0x20].offset_higherbits = (timer_address & 0xffff0000) >> 16;
++	/*
++	set_idtdesc(0, DIVIDE_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(1, DEBUG_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(2, NMI_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(3, BPKPT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(4, OVLOW_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(5, BOUND_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(6, ILLOP_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(7, DEVICE_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(8, DBLFLT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(10, TSS_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(11, SEGNP_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(12, STACK_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(13, GPFLT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(14, PGFLT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(16, FPERR_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(17, ALIGN_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(18, MCHK_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(19, SIMDERR_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	*/
++
++
++
++
++	//set_idtdesc(0x20, timer_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++	set_idtdesc(0x21, (char *)keyboard_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
++
+ 
+ 	timer_init();
+ 
+@@ -71,29 +108,29 @@ void idt_init(void)
+ 	*/
+ 
+ 	/* ICW1 - begin initialization */
+-	outb_p(0x20 , 0x11);
+-	outb_p(0xA0 , 0x11);
++	write_port(0x20 , 0x11);
++	write_port(0xA0 , 0x11);
+ 
+ 	/* ICW2 - remap offset address of IDT */
+ 	/*
+ 	* In x86 protected mode, we have to remap the PICs beyond 0x20 because
+ 	* Intel have designated the first 32 interrupts as "reserved" for cpu exceptions
+ 	*/
+-	outb_p(0x21 , 0x20);
+-	outb_p(0xA1 , 0x28);
++	write_port(0x21 , 0x20);
++	write_port(0xA1 , 0x28);
+ 
+ 	/* ICW3 - setup cascading */
+-	outb_p(0x21 , 0x00);
+-	outb_p(0xA1 , 0x00);
++	write_port(0x21 , 0x00);
++	write_port(0xA1 , 0x00);
+ 
+ 	/* ICW4 - environment info */
+-	outb_p(0x21 , 0x01);
+-	outb_p(0xA1 , 0x01);
++	write_port(0x21 , 0x01);
++	write_port(0xA1 , 0x01);
+ 	/* Initialization finished */
+ 
+ 	/* mask interrupts */
+-	outb_p(0x21 , 0xff);
+-	outb_p(0xA1 , 0xff);
++	write_port(0x21 , 0xff);
++	write_port(0xA1 , 0xff);
+ 
+ 	/* fill the IDT descriptor */
+ 	idt_address = (unsigned long)IDT ;
+diff --git a/kernel.c b/kernel.c
+index 9e9493a..7558919 100644
+--- a/kernel.c
++++ b/kernel.c
+@@ -1,7 +1,7 @@
+-
+ #include "io.h"
+ #include "timer.h"
+ #include "fifo.h"
++#include "idt.h"
+ 
+ #define KEYBOARD_DATA_PORT 0x60
+ #define KEYBOARD_STATUS_PORT 0x64
+@@ -36,71 +36,6 @@ struct IDT_entry {
+ struct IDT_entry IDT[IDT_SIZE];
+ 
+ 
+-void idt_init(void)
+-{
+-	unsigned long keyboard_address;
+-	unsigned long timer_address;
+-	unsigned long idt_address;
+-	unsigned long idt_ptr[2];
+-
+-	/* populate IDT entry of keyboard's interrupt */
+-	keyboard_address = (unsigned long)keyboard_handler;
+-	IDT[0x21].offset_lowerbits = keyboard_address & 0xffff;
+-	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
+-	IDT[0x21].zero = 0;
+-	IDT[0x21].type_attr = INTERRUPT_GATE;
+-	IDT[0x21].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
+-
+-
+-	timer_address = (unsigned long)timer_handler;
+-	IDT[0x20].offset_lowerbits = timer_address & 0xffff;
+-	IDT[0x20].selector = KERNEL_CODE_SEGMENT_OFFSET;
+-	IDT[0x20].zero = 0;
+-	IDT[0x20].type_attr = INTERRUPT_GATE;
+-	IDT[0x20].offset_higherbits = (timer_address & 0xffff0000) >> 16;
+-
+-
+-
+-	timer_init();
+-	/*     Ports
+-	*	 PIC1	PIC2
+-	*Command 0x20	0xA0
+-	*Data	 0x21	0xA1
+-	*/
+-
+-	/* ICW1 - begin initialization */
+-	write_port(0x20 , 0x11);
+-	write_port(0xA0 , 0x11);
+-
+-	/* ICW2 - remap offset address of IDT */
+-	/*
+-	* In x86 protected mode, we have to remap the PICs beyond 0x20 because
+-	* Intel have designated the first 32 interrupts as "reserved" for cpu exceptions
+-	*/
+-	write_port(0x21 , 0x20);
+-	write_port(0xA1 , 0x28);
+-
+-	/* ICW3 - setup cascading */
+-	write_port(0x21 , 0x00);
+-	write_port(0xA1 , 0x00);
+-
+-	/* ICW4 - environment info */
+-	write_port(0x21 , 0x01);
+-	write_port(0xA1 , 0x01);
+-	/* Initialization finished */
+-
+-	/* mask interrupts */
+-	write_port(0x21 , 0xff);
+-	write_port(0xA1 , 0xff);
+-
+-	/* fill the IDT descriptor */
+-	idt_address = (unsigned long)IDT ;
+-	idt_ptr[0] = (sizeof (struct IDT_entry) * IDT_SIZE) + ((idt_address & 0xffff) << 16);
+-	idt_ptr[1] = idt_address >> 16 ;
+-
+-	load_idt(idt_ptr);
+-}
+-
+ void allow_intr(void)
+ {
+ 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
+@@ -110,6 +45,9 @@ void allow_intr(void)
+ void timer_handler_main(void){
+ 	write_port(0x20, 0x20);
+ 	tick++;
++	if(tick % 100 == 0){
++		kput_char('d');
++	}
+ }
+ 
+ 
+@@ -162,6 +100,5 @@ void kmain(void)
+ 		kprint_newline();
+ 	}
+ 
+-
+ 	interactive();
+ }
+\ No newline at end of file
+diff --git a/test.c b/test.c
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/timer.c b/timer.c
+index 94821e5..4b54689 100644
+--- a/timer.c
++++ b/timer.c
+@@ -2,6 +2,8 @@
+ 
+ extern char read_port(unsigned short port);
+ extern void write_port(unsigned short port, unsigned char data);
++extern unsigned int tick;
++
+ 
+ void timer_init(void)
+ {
+@@ -11,3 +13,7 @@ void timer_init(void)
+     write_port(0x9c, IOADR_PIT_COUNTER0);
+     write_port(0x2e, IOADR_PIT_COUNTER0);
+ }
++
++unsigned int get_tick(void){
++	return tick;
++}
+\ No newline at end of file

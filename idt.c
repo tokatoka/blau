@@ -9,6 +9,9 @@
 #define IOADR_PIT_CONTROL_WORD_BIT_MODE2		0x04
 
 #include "./io.h"
+#include "timer.h"
+
+extern void write_port(unsigned short port, unsigned char data);
 
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
@@ -25,17 +28,15 @@ extern void timer_handler(void);
 extern void load_idt(unsigned long *idt_ptr);
 extern void kprint(const char *);
 
-void timer_init(void)
-{
-	/* Setup PIT */
-	outb_p(IOADR_PIT_CONTROL_WORD_BIT_COUNTER0
-	       | IOADR_PIT_CONTROL_WORD_BIT_16BIT_READ_LOAD
-	       | IOADR_PIT_CONTROL_WORD_BIT_MODE2, IOADR_PIT_CONTROL_WORD);
-	/* 割り込み周期11932(0x2e9c)サイクル(=100Hz、10ms毎)に設定 */
-	outb_p(0x9c, IOADR_PIT_COUNTER0);
-	outb_p(0x2e, IOADR_PIT_COUNTER0);
-}
 
+void set_idtdesc(unsigned int idx,char *handler_addr,unsigned short int sel,unsigned char type){
+	unsigned long addr = (unsigned long)handler_addr;
+	IDT[idx].offset_lowerbits = addr & 0xffff;
+	IDT[idx].selector = sel;
+	IDT[idx].zero = 0;
+	IDT[idx].type_attr = type;
+	IDT[idx].offset_higherbits = (addr & 0xffff0000) >> 16;
+}
 
 
 void idt_init(void)
@@ -71,29 +72,29 @@ void idt_init(void)
 	*/
 
 	/* ICW1 - begin initialization */
-	outb_p(0x20 , 0x11);
-	outb_p(0xA0 , 0x11);
+	write_port(0x20 , 0x11);
+	write_port(0xA0 , 0x11);
 
 	/* ICW2 - remap offset address of IDT */
 	/*
 	* In x86 protected mode, we have to remap the PICs beyond 0x20 because
 	* Intel have designated the first 32 interrupts as "reserved" for cpu exceptions
 	*/
-	outb_p(0x21 , 0x20);
-	outb_p(0xA1 , 0x28);
+	write_port(0x21 , 0x20);
+	write_port(0xA1 , 0x28);
 
 	/* ICW3 - setup cascading */
-	outb_p(0x21 , 0x00);
-	outb_p(0xA1 , 0x00);
+	write_port(0x21 , 0x00);
+	write_port(0xA1 , 0x00);
 
 	/* ICW4 - environment info */
-	outb_p(0x21 , 0x01);
-	outb_p(0xA1 , 0x01);
+	write_port(0x21 , 0x01);
+	write_port(0xA1 , 0x01);
 	/* Initialization finished */
 
 	/* mask interrupts */
-	outb_p(0x21 , 0xff);
-	outb_p(0xA1 , 0xff);
+	write_port(0x21 , 0xff);
+	write_port(0xA1 , 0xff);
 
 	/* fill the IDT descriptor */
 	idt_address = (unsigned long)IDT ;
