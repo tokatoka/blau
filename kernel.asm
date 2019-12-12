@@ -13,6 +13,25 @@ global read_port
 global write_port
 global load_idt
 global read_gdt
+global DIVIDE_handler
+global DEBUG_handler
+global NMI_handler
+global BPKPT_handler
+global OVLOW_handler
+global BOUND_handler
+global ILLOP_handler
+global DEVICE_handler
+global DBLFLT_handler
+global TSS_handler
+global SEGNP_handler
+global STACK_handler
+global GPFLT_handler
+global PGFLT_handler
+global FPERR_handler
+global ALIGN_handler
+global MCHK_handler
+global SIMDERR_handler
+
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -40,6 +59,78 @@ read_gdt:
 	mov edx, [esp + 4]
 	sgdt [edx]
 	ret
+
+DIVIDE_handler:
+	jmp DIVIDE_handler
+	iret
+
+DEBUG_handler:
+	jmp DEBUG_handler
+	iret
+
+NMI_handler:
+	jmp NMI_handler
+	iret
+
+BPKPT_handler:
+	jmp BPKPT_handler
+	iret
+
+OVLOW_handler:
+	jmp OVLOW_handler
+	iret
+
+BOUND_handler:
+	jmp BOUND_handler
+	iret
+
+ILLOP_handler:
+	jmp ILLOP_handler
+	iret
+
+DEVICE_handler:
+	jmp DEBUG_handler
+	iret
+
+DBLFLT_handler:
+	jmp DBLFLT_handler
+	iret
+
+TSS_handler:
+	jmp TSS_handler
+	iret
+
+SEGNP_handler:
+	jmp SEGNP_handler
+	iret
+
+STACK_handler:
+	jmp STACK_handler
+	iret
+
+GPFLT_handler:
+	jmp GPFLT_handler
+	iret
+
+PGFLT_handler:
+	jmp PGFLT_handler
+	iret
+
+FPERR_handler:
+	jmp FPERR_handler
+	iret
+
+ALIGN_handler:
+	jmp ALIGN_handler
+	iret
+
+MCHK_handler:
+	jmp MCHK_handler
+	iret
+
+SIMDERR_handler:
+	jmp SIMDERR_handler
+	iret
 
 keyboard_handler:
 	pusha

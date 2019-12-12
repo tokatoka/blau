@@ -1,6 +1,8 @@
 #define IDT_SIZE 256
-#define INTERRUPT_GATE 0x8e
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
+
+#define INTERRUPT_GATE_DPL0 0x8e
+#define TRAP_GATE_DPL0 0x8f
 
 #define IOADR_PIT_COUNTER0	0x0040
 #define IOADR_PIT_CONTROL_WORD	0x0043
@@ -11,6 +13,9 @@
 #include "./io.h"
 #include "timer.h"
 
+
+extern void keyboard_handler(void);
+extern void timer_handler(void);
 extern void write_port(unsigned short port, unsigned char data);
 
 struct IDT_entry {
@@ -28,8 +33,29 @@ extern void timer_handler(void);
 extern void load_idt(unsigned long *idt_ptr);
 extern void kprint(const char *);
 
+extern void DIVIDE_handler(void);
+extern void DEBUG_handler(void);
+extern void NMI_handler(void);
+extern void BPKPT_handler(void);
+extern void OVLOW_handler(void);
+extern void BOUND_handler(void);
+extern void ILLOP_handler(void);
+extern void DEVICE_handler(void);
+extern void DBLFLT_handler(void);
+extern void TSS_handler(void);
+extern void SEGNP_handler(void);
+extern void STACK_handler(void);
+extern void GPFLT_handler(void);
+extern void PGFLT_handler(void);
+extern void FPERR_handler(void);
+extern void ALIGN_handler(void);
+extern void MCHK_handler(void);
+extern void SIMDERR_handler(void);
 
-void set_idtdesc(unsigned int idx,char *handler_addr,unsigned short int sel,unsigned char type){
+
+
+
+void set_idtdesc(unsigned int idx,void *handler_addr,unsigned short int sel,unsigned char type){
 	unsigned long addr = (unsigned long)handler_addr;
 	IDT[idx].offset_lowerbits = addr & 0xffff;
 	IDT[idx].selector = sel;
@@ -41,26 +67,35 @@ void set_idtdesc(unsigned int idx,char *handler_addr,unsigned short int sel,unsi
 
 void idt_init(void)
 {
-	unsigned long keyboard_address;
-	unsigned long timer_address;
 	unsigned long idt_address;
 	unsigned long idt_ptr[2];
 
 	/* populate IDT entry of keyboard's interrupt */
-	keyboard_address = (unsigned long)keyboard_handler;
-	timer_address = (unsigned long)timer_handler;
-	IDT[0x21].offset_lowerbits = keyboard_address & 0xffff;
-	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
-	IDT[0x21].zero = 0;
-	IDT[0x21].type_attr = INTERRUPT_GATE;
-	IDT[0x21].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
+
+	set_idtdesc(0, DIVIDE_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(1, DEBUG_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(2, NMI_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(3, BPKPT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(4, OVLOW_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(5, BOUND_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(6, ILLOP_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(7, DEVICE_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(8, DBLFLT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(10, TSS_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(11, SEGNP_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(12, STACK_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(13, GPFLT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(14, PGFLT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(16, FPERR_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(17, ALIGN_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(18, MCHK_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(19, SIMDERR_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
 
 
-	IDT[0x20].offset_lowerbits = timer_address & 0xffff;
-	IDT[0x20].selector = KERNEL_CODE_SEGMENT_OFFSET;
-	IDT[0x20].zero = 0;
-	IDT[0x20].type_attr = INTERRUPT_GATE;
-	IDT[0x20].offset_higherbits = (timer_address & 0xffff0000) >> 16;
+
+
+	set_idtdesc(0x20,timer_handler,KERNEL_CODE_SEGMENT_OFFSET,INTERRUPT_GATE_DPL0);
+	set_idtdesc(0x21,keyboard_handler,KERNEL_CODE_SEGMENT_OFFSET,INTERRUPT_GATE_DPL0);
 
 	timer_init();
 
