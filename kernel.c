@@ -7,7 +7,6 @@
 #define IDT_SIZE 256
 #define INTERRUPT_GATE 0x8e
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
-
 #define ENTER_KEY_CODE 0x1C
 
 unsigned int tick = 0;
@@ -109,9 +108,6 @@ void allow_intr(void)
 void timer_handler_main(void){
 	write_port(0x20, 0x20);
 	tick++;
-	if(tick % 100 == 0){
-		kprint("!!");
-	}
 }
 
 
@@ -130,7 +126,7 @@ void keyboard_handler_main(void)
 		if(keycode < 0)
 			return;
 
-		if(keycode == ENTER_KEY_CODE) {
+		if(keycode == 28) {
 			kprint_newline();
 			return;
 		}
@@ -140,8 +136,16 @@ void keyboard_handler_main(void)
 	}
 }
 
+
+void disable_cursor()
+{
+	write_port(0x3D4, 0x0A);
+	write_port(0x3D5, 0x20);
+}
+
 void kmain(void)
 {
+	disable_cursor();
 	clear_screen();
 	kprint("blau kernel");
 	kprint_newline();
