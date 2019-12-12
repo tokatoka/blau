@@ -1,4 +1,4 @@
-#include "keyboard_map.h"
+
 #include "io.h"
 #include "timer.h"
 #include "fifo.h"
@@ -128,13 +128,7 @@ void keyboard_handler_main(void)
 		if(keycode < 0)
 			return;
 
-		if(keycode == 28) {
-			kprint_newline();
-			return;
-		}
-
-		vidptr[current_loc++] = keyboard_map[(unsigned char) keycode];
-		vidptr[current_loc++] = 0x07;
+		push_fifo32(&iobuf,keycode);
 	}
 }
 
@@ -144,6 +138,7 @@ void disable_cursor()
 	write_port(0x3D4, 0x0A);
 	write_port(0x3D5, 0x20);
 }
+
 
 void kmain(void)
 {
@@ -168,6 +163,5 @@ void kmain(void)
 	}
 
 
-
-	while(1);
+	interactive();
 }

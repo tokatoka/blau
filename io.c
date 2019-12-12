@@ -2,11 +2,13 @@
 #define COLUMNS_IN_LINE 80
 #define BYTES_FOR_EACH_ELEMENT 2
 #define SCREENSIZE BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE * LINES
-
+#include "fifo.h"
+#include "keyboard_map.h"
 /* current cursor location */
 unsigned int current_loc = 0;
 /* video memory begins at address 0xb8000 */
 char *vidptr = (char*)0xb8000;
+extern struct fifo32 iobuf;
 
 void kprint(const char *str)
 {
@@ -20,21 +22,6 @@ void kprint(const char *str)
 void kput_char(char c){
 	vidptr[current_loc++] = c;
 	vidptr[current_loc++] = 0x07;
-}
-
-void kprint_newline(void)
-{
-	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
-	current_loc = current_loc + (line_size - current_loc % (line_size));
-}
-
-void clear_screen(void)
-{
-	unsigned int i = 0;
-	while (i < SCREENSIZE) {
-		vidptr[i++] = ' ';
-		vidptr[i++] = 0x07;
-	}
 }
 
 void kprint_hex(unsigned int i){
@@ -72,7 +59,47 @@ void kprint_hex(unsigned int i){
 	}
 }
 
+
+unsigned char kread_from_queue(){
+	unsigned int ret = pop_fifo32(&iobuf);
+
+	if(ret == 0xdeadbeef){
+		return 255;
+	}
+	else{
+		return (unsigned) ret;
+	}
+}
+
+void kprint_newline(void)
+{
+	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
+	current_loc = current_loc + (line_size - current_loc % (line_size));
+}
+
+void clear_screen(void)
+{
+	unsigned int i = 0;
+	while (i < SCREENSIZE) {
+		vidptr[i++] = ' ';
+		vidptr[i++] = 0x07;
+	}
+}
+
 void dump4bytes(char *ptr){
 	unsigned int value = *(unsigned int *)(ptr);
 	kprint_hex(value);
+}
+
+
+void interactive(){
+	while(1){
+		unsigned char c = kread_from_queue();
+		if(c == 255){
+			continue;
+		}
+		else{
+			kput_char(keyboard_map[c]);
+		}
+	}
 }
