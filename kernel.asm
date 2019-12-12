@@ -1,21 +1,3 @@
-;;kernel.asm
-
-;nasm directive - 32 bit
-bits 32
-section .text
-        ;multiboot spec
-        align 4
-        dd 0x1BADB002            ;magic
-        dd 0x00                  ;flags
-        dd - (0x1BADB002 + 0x00) ;checksum. m+f+c should be zero
-
-global start
-global keyboard_handler
-global timer_handler
-global read_port
-; Copyright (C) 2014  Arjun Sreedharan
-; License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
-
 bits 32
 section .text
         ;multiboot spec
@@ -26,9 +8,11 @@ section .text
 
 global start
 global keyboard_handler
+global timer_handler
 global read_port
 global write_port
 global load_idt
+global read_gdt
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -52,12 +36,16 @@ load_idt:
 	sti 				;turn on interrupts
 	ret
 
+read_gdt:
+	mov edx, [esp + 4]
+	sgdt [edx]
+	ret
+
 keyboard_handler:
 	pusha
 	call    keyboard_handler_main
 	popa
 	iretd
-
 
 timer_handler:
 	pusha
@@ -67,9 +55,34 @@ timer_handler:
 
 start:
 	cli 				;block interrupts
+	lgdt [gdt_descr]
 	mov esp, stack_space
 	call kmain
 	hlt 				;halt the CPU
+
+gdt_descr:
+	dw	16*8-1
+	dd	gdt
+	dw 	0
+
+gdt:
+	dq	0x0000000000000000
+	dq	0x00cf9a000000ffff
+	dq	0x00cf92000000ffff
+	dq	0x00cffa000000ffff
+	dq	0x00cff2000000ffff
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+	dq  0
+
 
 section .bss
 resb 8192; 8KB for stack

@@ -18,9 +18,11 @@ extern void timer_handler(void);
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
+extern void read_gdt(char *);
+
 extern char* vidptr;
 extern unsigned int current_loc;
-
+char *gdt_entry;
 
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
@@ -140,14 +142,24 @@ void keyboard_handler_main(void)
 
 void kmain(void)
 {
-	const char *str = "my first kernel with keyboard support";
 	clear_screen();
-	kprint(str);
+	kprint("blau kernel");
 	kprint_newline();
 	kprint_newline();
 
 	idt_init();
 	allow_intr();
+	char addr[8] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
+	read_gdt(addr);
+	gdt_entry = (char *)*(unsigned int *)(addr + 2);
+
+
+	kprint("checking gdt");
+	kprint_newline();
+	for(int i = 0 ; i < 2 * 5; i++){
+		dump4bytes(gdt_entry + i * 4);
+		kprint_newline();
+	}
 
 	while(1);
 }

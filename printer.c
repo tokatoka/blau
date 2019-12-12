@@ -17,6 +17,11 @@ void kprint(const char *str)
 	}
 }
 
+void kput_char(char c){
+	vidptr[current_loc++] = c;
+	vidptr[current_loc++] = 0x07;
+}
+
 void kprint_newline(void)
 {
 	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
@@ -30,4 +35,44 @@ void clear_screen(void)
 		vidptr[i++] = ' ';
 		vidptr[i++] = 0x07;
 	}
+}
+
+void kprint_hex(unsigned int i){
+	unsigned int victim = 0xf0000000;
+	kput_char('0');
+	kput_char('x');
+	for(int it = 1 ; it <= 8 ; it++){
+		unsigned int value = victim & i;
+		value = value >> (32 - 4 * it);
+		if(value <= 9){
+			kput_char('0' + value);
+		}
+		else if(value == 10){
+			kput_char('a');
+		}
+		else if(value == 11){
+			kput_char('b');
+		}
+		else if(value == 12){
+			kput_char('c');
+		}
+		else if(value == 13){
+			kput_char('d');
+		}
+		else if(value == 14){
+			kput_char('e');
+		}
+		else if(value == 15){
+			kput_char('f');
+		}
+		else{
+			kprint("error");
+		}
+		victim = (victim >> 4);
+	}
+}
+
+void dump4bytes(char *ptr){
+	unsigned int value = *(unsigned int *)(ptr);
+	kprint_hex(value);
 }
