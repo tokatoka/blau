@@ -1,10 +1,15 @@
+%define MULTIBOOT_PAGE_ALIGN 0x1
+%define MULTIBOOT_MEMORY_INFO 0x2
+
+%define MULTIBOOT_HEADER_FLAGS (MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO)
+
 bits 32
 section .text
         ;multiboot spec
         align 4
-        dd 0x1BADB002              ;magic
-        dd 0x00                    ;flags
-        dd - (0x1BADB002 + 0x00)   ;checksum. m+f+c should be zero
+        dd 0x1BADB002
+        dd 0x3
+        dd -(0x1BADB002 + 0x3)
 
 global start
 global keyboard_handler
@@ -38,6 +43,7 @@ extern keyboard_handler_main
 extern timer_handler_main
 extern kernel_panic
 extern DBLFLT_handler_main
+
 
 read_port:
 	mov edx, [esp + 4]
@@ -154,6 +160,8 @@ start:
 	cli 				;block interrupts
 	lgdt [gdt_descr]
 	mov esp, stack_space
+	push ebx
+	push eax
 	call kmain
 	hlt 				;halt the CPU
 

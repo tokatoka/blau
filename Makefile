@@ -11,7 +11,10 @@ run: blau
 	qemu-system-i386 -kernel blau
 
 debug: blau
-	qemu-system-i386 -kernel blau -gdb tcp::6789
+	qemu-system-i386 -kernel blau -gdb tcp::6789 -S
+
+monitor: blau
+	qemu-system-i386 -kernel blau -monitor telnet:localhost:44444,server,nowait
 
 clean:
 	rm -rf blau *.o

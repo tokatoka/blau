@@ -2,6 +2,7 @@
 #include "io.h"
 #include "timer.h"
 #include "fifo.h"
+#include "multiboot.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_STATUS_PORT 0x64
@@ -79,29 +80,37 @@ int panic(){
 	int a = 3 / 0;
 }
 
-void kmain(void)
+void test_mem(multiboot_info *info){
+
+	kprint("lower:");
+	kprint_hex(info -> mem_lower);
+	kprint_newline();
+
+	kprint("upper:");
+	kprint_hex(info -> mem_upper);
+	kprint_newline();
+
+	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
+		kprintn("found one!");
+	}
+
+
+}
+
+void kmain(unsigned long magic,multiboot_info *info)
 {
 	disable_cursor();
 	clear_screen();
-	kprint("blau kernel");
-	kprint_newline();
-	kprint_newline();
+	kprintn("blau kernel");
+
+	if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
+		kprintn("invalid multiboot magic!");
+	}
+
+	test_mem(info);
 
 	idt_init();
 	allow_intr();
-	char addr[8] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
-	read_gdt(addr);
-	gdt_entry = (char *)*(unsigned int *)(addr + 2);
-
-
-	kprint("checking gdt");
-	kprint_newline();
-	for(int i = 0 ; i < 2 * 5; i++){
-		dump4bytes(gdt_entry + i * 4);
-		kprint_newline();
-	}
-
-	panic();
 
 	interactive();
 }

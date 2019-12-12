@@ -19,6 +19,8 @@ void kprint(const char *str)
 	}
 }
 
+
+
 void kput_char(char c){
 	vidptr[current_loc++] = c;
 	vidptr[current_loc++] = 0x07;
@@ -75,6 +77,11 @@ void kprint_newline(void)
 {
 	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
 	current_loc = current_loc + (line_size - current_loc % (line_size));
+}
+
+void kprintn(const char *str){
+	kprint(str);
+	kprint_newline();
 }
 
 void clear_screen(void)
