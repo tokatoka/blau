@@ -4,6 +4,7 @@ void clear_screen(void);
 void kput_char(char c);
 void kprint_hex(unsigned int);
 void dump4bytes(char *);
+void write4bytes(char *,unsigned int);
 unsigned char kread_from_queue();
 void interactive();
 void kprintn(const char *str);

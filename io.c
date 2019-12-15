@@ -98,6 +98,10 @@ void dump4bytes(char *ptr){
 	kprint_hex(value);
 }
 
+void write4bytes(char *ptr, unsigned int v){
+	unsigned int *lptr = (unsigned int *)ptr;
+	*lptr = v;
+}
 
 void interactive(){
 	while(1){

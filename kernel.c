@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "fifo.h"
 #include "multiboot.h"
+#include "mem.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_STATUS_PORT 0x64
@@ -19,6 +20,7 @@ extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
 extern void read_gdt(char *);
+extern void enable_paging();
 
 extern char* vidptr;
 extern unsigned int current_loc;
@@ -120,7 +122,8 @@ void kmain(unsigned long magic,multiboot_info *info)
 
 	idt_init();
 	allow_intr();
-
+	mem_init();
+	enable_paging();
 
 	interactive();
 }

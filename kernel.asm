@@ -36,6 +36,7 @@ global FPERR_handler
 global ALIGN_handler
 global MCHK_handler
 global SIMDERR_handler
+global enable_paging
 
 
 extern kmain 		;this is defined in the c file
@@ -156,10 +157,18 @@ timer_handler:
 	popa
 	iretd
 
+enable_paging:
+	mov eax,0x1ff000
+	mov cr3,eax
+	mov eax,cr0
+	or eax,0x80000000
+	mov cr0,eax
+	ret
+
 start:
 	cli 				;block interrupts
 	lgdt [gdt_descr]
-	mov esp, stack_space
+	mov esp, 0x1f0000
 	push ebx
 	push eax
 	call kmain
@@ -191,4 +200,3 @@ gdt:
 
 section .bss
 resb 8192; 8KB for stack
-stack_space:

@@ -22,3 +22,9 @@ void memcpy(char *src,char *dst,unsigned int size){
 		*(dst + i) = *(src + i);
 	}
 }
+
+void memset(char *src, char v, unsigned int size){
+	for(int i = 0 ; i < size; i++){
+		*(src + i) = v;
+	}
+}
