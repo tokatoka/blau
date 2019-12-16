@@ -84,25 +84,12 @@ int panic(){
 
 void test_mem(multiboot_info *info){
 
-	kprint("lower:");
-	kint2hex(info -> mem_lower);
-	kprint_newline();
-
-	kprint("upper:");
-	kint2hex(info -> mem_upper);
-	kprint_newline();
+	kprintf("beginning memory test\n");
+	kprintf("lower: %x\n",info->mem_lower);
+	kprintf("upper: %x\n",info->mem_upper);
 
 	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
-		kprint("range");
-		kput_char(' ');
-		kint2hex(mmap -> base_addr_low);
-		kput_char(' ');
-		kint2hex(mmap -> length_low);
-		kput_char(' ');
-		kprint("type");
-		kput_char(' ');
-		kint2hex(mmap -> type);
-		kprint_newline();
+		kprintf("range %x %x, type %d\n",mmap -> base_addr_low, mmap -> length_low, mmap -> type);
 	}
 
 
