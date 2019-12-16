@@ -68,13 +68,13 @@ void disable_cursor()
 
 void kernel_panic()
 {
-	kprint("kernel panic!!! halting!");
+	kprintf("kernel panic!!! halting!\n");
 	while(1);
 }
 
 void DBLFLT_handler_main()
 {
-	kprint("double fault!!");
+	kprintf("double fault!!\n");
 	while(1);
 }
 
@@ -105,7 +105,6 @@ void kmain(unsigned long magic,multiboot_info *info)
 	}
 
 	test_mem(info);
-
 	idt_init();
 	allow_intr();
 	mem_init();

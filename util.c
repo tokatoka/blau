@@ -38,3 +38,22 @@ unsigned int read4bytes(char *ptr){
 	unsigned int *lptr = (unsigned int *)ptr;
 	return *lptr;
 }
+
+unsigned int roundup(unsigned int num, unsigned int n){
+	if(num % n == 0){
+		return num;
+	}
+	else{
+		unsigned int rem = num % n;
+		return (num - rem) + n;
+	}
+}
+unsigned int rounddown(unsigned int num,unsigned int n){
+	if(num % n == 0){
+		return n;
+	}
+	else{
+		unsigned int rem = num % n;
+		return (num - rem);
+	}
+}
