@@ -85,23 +85,23 @@ int panic(){
 void test_mem(multiboot_info *info){
 
 	kprint("lower:");
-	kprint_hex(info -> mem_lower);
+	kint2hex(info -> mem_lower);
 	kprint_newline();
 
 	kprint("upper:");
-	kprint_hex(info -> mem_upper);
+	kint2hex(info -> mem_upper);
 	kprint_newline();
 
 	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
 		kprint("range");
 		kput_char(' ');
-		kprint_hex(mmap -> base_addr_low);
+		kint2hex(mmap -> base_addr_low);
 		kput_char(' ');
-		kprint_hex(mmap -> length_low);
+		kint2hex(mmap -> length_low);
 		kput_char(' ');
 		kprint("type");
 		kput_char(' ');
-		kprint_hex(mmap -> type);
+		kint2hex(mmap -> type);
 		kprint_newline();
 	}
 
@@ -112,8 +112,7 @@ void kmain(unsigned long magic,multiboot_info *info)
 {
 	disable_cursor();
 	clear_screen();
-	kprintn("blau kernel");
-
+	kprintf("%s %s %d %x\n","blau","kernel",114514,1131796);
 	if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
 		kprintn("invalid multiboot magic!");
 	}

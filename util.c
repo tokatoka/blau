@@ -28,3 +28,13 @@ void memset(char *src, char v, unsigned int size){
 		*(src + i) = v;
 	}
 }
+
+void write4bytes(char *ptr, unsigned int v){
+	unsigned int *lptr = (unsigned int *)ptr;
+	*lptr = v;
+}
+
+unsigned int read4bytes(char *ptr){
+	unsigned int *lptr = (unsigned int *)ptr;
+	return *lptr;
+}

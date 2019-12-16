@@ -10,23 +10,55 @@ unsigned int current_loc = 0;
 char *vidptr = (char*)0xb8000;
 extern struct fifo32 iobuf;
 
-void kprint(const char *str)
+void kprint_newline(void)
 {
-	unsigned int i = 0;
-	while (str[i] != '\0') {
-		vidptr[current_loc++] = str[i++];
+	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
+	current_loc = current_loc + (line_size - current_loc % (line_size));
+}
+
+
+void kput_char(char c){
+	if(c == '\n'){
+		kprint_newline();
+	}
+	else if(c == '\t'){
+		current_loc += 8;
+	}
+	else{
+		vidptr[current_loc++] = c;
 		vidptr[current_loc++] = 0x07;
 	}
 }
 
 
-
-void kput_char(char c){
-	vidptr[current_loc++] = c;
-	vidptr[current_loc++] = 0x07;
+void kprint(const char *str)
+{
+	unsigned int i = 0;
+	while (str[i] != '\0') {
+		kput_char(str[i]);
+		i++;
+	}
 }
 
-void kprint_hex(unsigned int i){
+void kint2dec(unsigned int i){
+	unsigned int victim = 1000000000;
+	char begin = 0;
+	for(int it = 1 ; it <= 10; it++){
+		unsigned int value = i / victim;
+		if(value == 0 && begin == 0){
+			victim = victim / 10;
+			continue;
+		}
+		else{
+			begin = 1;
+			kput_char('0' + value);
+			i = i % victim;
+			victim = victim / 10;
+		}
+	}
+}
+
+void kint2hex(unsigned int i){
 	unsigned int victim = 0xf0000000;
 	kput_char('0');
 	kput_char('x');
@@ -73,11 +105,6 @@ unsigned char kread_from_queue(){
 	}
 }
 
-void kprint_newline(void)
-{
-	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
-	current_loc = current_loc + (line_size - current_loc % (line_size));
-}
 
 void kprintn(const char *str){
 	kprint(str);
@@ -95,12 +122,40 @@ void clear_screen(void)
 
 void dump4bytes(char *ptr){
 	unsigned int value = *(unsigned int *)(ptr);
-	kprint_hex(value);
+	kint2hex(value);
 }
 
-void write4bytes(char *ptr, unsigned int v){
-	unsigned int *lptr = (unsigned int *)ptr;
-	*lptr = v;
+
+void kprintf(char *fmt,...){
+	char **arg = (char **)&fmt;
+	char c;
+	arg++;
+
+	while((c = *fmt++) != 0){
+		if(c != '%'){
+			kput_char(c);
+		}
+		else{
+			c = *fmt++;
+			switch(c){
+				case 'd':
+					if(0 > *((int *)arg)){
+						kput_char('-');
+						*((int *)arg) *= -1;
+					}
+					kint2dec(*((unsigned *) arg++));
+					break;
+				case 'x':
+					kint2hex(*((unsigned *) arg++));
+					break;
+				case 's':
+					kprint(*arg++);
+					break;
+				default:
+					kput_char(c);
+			}
+		}
+	}
 }
 
 void interactive(){
@@ -114,3 +169,4 @@ void interactive(){
 		}
 	}
 }
+
