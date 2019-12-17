@@ -46,3 +46,5 @@ struct physpage{
 };
 
 void mem_init();
+struct physpage *page_alloc();
+void *pp2pa(struct physpage *);

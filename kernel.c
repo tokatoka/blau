@@ -66,21 +66,12 @@ void disable_cursor()
 	write_port(0x3D5, 0x20);
 }
 
-void kernel_panic()
-{
-	kprintf("kernel panic!!! halting!\n");
-	while(1);
-}
-
 void DBLFLT_handler_main()
 {
 	kprintf("double fault!!\n");
 	while(1);
 }
 
-int panic(){
-	int a = 3 / 0;
-}
 
 void test_mem(multiboot_info *info){
 

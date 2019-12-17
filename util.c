@@ -1,3 +1,6 @@
+#include "io.h"
+extern void haltloop();
+
 unsigned int strlen(char *s){
 	unsigned int ret;
 	unsigned int i = 0;
@@ -56,4 +59,10 @@ unsigned int rounddown(unsigned int num,unsigned int n){
 		unsigned int rem = num % n;
 		return (num - rem);
 	}
+}
+
+
+void panic(){
+	kprintf("kernel panic!");
+	haltloop();
 }

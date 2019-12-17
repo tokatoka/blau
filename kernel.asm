@@ -33,18 +33,18 @@ global STACK_handler
 global GPFLT_handler
 global PGFLT_handler
 global FPERR_handler
-global ALIGN_handler
 global MCHK_handler
 global SIMDERR_handler
+global ALIGN_handler
 global enable_paging
-
+global haltloop
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
 extern timer_handler_main
 extern kernel_panic
 extern DBLFLT_handler_main
-
+extern panic
 
 read_port:
 	mov edx, [esp + 4]
@@ -71,7 +71,7 @@ read_gdt:
 
 DIVIDE_handler:
 	pusha
-	call kernel_panic
+	call panic
 	popa
 	iret
 
@@ -164,6 +164,9 @@ enable_paging:
 	or eax,0x80000000
 	mov cr0,eax
 	ret
+
+haltloop:
+	jmp haltloop
 
 start:
 	cli 				;block interrupts

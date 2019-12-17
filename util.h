@@ -6,3 +6,4 @@ void write4bytes(char *ptr, unsigned int v);
 unsigned int read4bytes(char *);
 unsigned int roundup(unsigned int num, unsigned int n);
 unsigned int rounddown(unsigned int num, unsigned int n);
+void panic();
