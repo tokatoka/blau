@@ -40,4 +40,9 @@ struct pde{
 	};
 };
 
+struct physpage{
+	struct physpage *next;
+	unsigned char use;
+};
+
 void mem_init();
