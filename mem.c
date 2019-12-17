@@ -1,11 +1,14 @@
 #include "mem.h"
 #include "util.h"
 #include "io.h"
+#include "assert.h"
 
 #define PGSIZE 0x1000
 char *next_free;
 struct physpage *freelist;
 struct physpage *framelist;
+struct pde *master_pde;
+unsigned int ext_max;
 
 
 unsigned int pde_idx(void *va){
@@ -48,49 +51,49 @@ void mem_init(){
 	~0x7fe0000 all usable memory
 
 	 */
-	struct pde* master_pde = (struct pde *)0x1ff000;
+	master_pde = (struct pde *)0x1ff000;
 	struct pde* pde_p = master_pde;
 	for(int i = 0; i < 0x400 ; i++){
 		pde_p -> all = 0;
 		pde_p++;
 	}
 
-
 	next_free = (void *)0x200000;
+	freelist=0;
+	framelist = (struct physpage *)alloc_mem((ext_max/0x1000) * sizeof(struct physpage));
 
 
-	framelist = (struct physpage *)alloc_mem((0x7fe0000/0x1000) * sizeof(struct physpage));
 	struct pte* pte_p = (struct pte *)alloc_mem(0x1000);
 	master_pde -> all = 0;
 	master_pde -> present = 1;
 	master_pde -> rw = 1;
 	master_pde -> off = ((unsigned int)pte_p / PGSIZE);
 
-	unsigned int idx = 0;
-	for(unsigned int i = 0 ; i < 0x400 ; i++){
+	for(unsigned int i = 0x0 ; i < 0x400 ; i++){
+
 		pte_p -> all = 0;
 		pte_p -> present = 1;
 		pte_p -> rw = 1;
-		pte_p -> off = idx;
+		pte_p -> off = i;
 		pte_p++;
-		idx++;
 	}
 
 
+	//assert(ext_max == 0x7fe0000)
 	//0x7fe0000 / 0x1000 = 32496
-	for(int i = 0; i < 0x7fe0000 / PGSIZE ;i++){
+	for(int i = 0; i < ext_max / PGSIZE ;i++){
 		if(i < 0x400000/PGSIZE){
 			framelist[i].use = 1;
+			continue;
 		}
-		else{
-			if(!freelist){
-				freelist = &framelist[i];
-			}
-			framelist[i].use = 0;
-			framelist[i].next = freelist;
-			freelist = &framelist[i];
-		}
+		framelist[i].use = 0;
+		framelist[i].next = freelist;
+		freelist = &framelist[i];
+
 	}
+
+	memorytest1();
+	memorytest2();
 
 }
 
@@ -176,6 +179,15 @@ struct physpage *page_lookup(struct pde *root, void *va, struct pte **pte_store)
 	}
 }
 
+
+void invlpg(void *va){
+	__asm__ volatile("invlpg (%0)" : : "r" (va) : "memory");
+}
+
+void tlb_invalidate(struct pde *root, void *va){
+	invlpg(va);
+}
+
 void page_remove(struct pde *root, void *va){
 	struct pte *pte_p;
 	struct physpage *pi = page_lookup(root,va,&pte_p);
@@ -183,6 +195,7 @@ void page_remove(struct pde *root, void *va){
 		return;
 	}
 	page_decref(pi);
+	tlb_invalidate(root,va);
 	pte_p -> all = 0;
 }
 
@@ -203,4 +216,106 @@ int page_insert(struct pde *root, struct physpage* pp, void *va, int rw,int us){
 	root[pde_idx(va)].rw = rw;
 	root[pde_idx(va)].us = us;
 	return 0;
+}
+
+
+void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us){
+	for(int i = 0 ; i < size / PGSIZE ; i++){
+		struct pte *pte_p = find_pte(root,va);
+		if(!pte_p){
+			panic();
+		}
+		pte_p -> off = (unsigned int)pa / 0x1000;
+		pte_p -> rw = rw;
+		pte_p -> us = us;
+		pte_p -> present = 1;
+		va = va + PGSIZE;
+		pa = pa + PGSIZE;
+	}
+}
+
+void memorytest1(){
+
+	if(!freelist){
+		panic();
+	}
+	struct physpage *pp, *pp0, *pp1, *pp2;
+	unsigned int nfree;
+
+	for(pp = freelist, nfree = 0;pp;pp=pp->next){
+		nfree++;
+	}
+	pp0=pp1=pp2=0;
+	assert((pp0 = page_alloc(0)));
+	assert((pp1 = page_alloc(0)));
+	assert((pp2 = page_alloc(0)));
+
+	assert(pp0);
+	assert(pp1 && pp1 != pp0);
+	assert(pp2 && pp2 != pp1 && pp2 != pp0);
+
+	struct physpage *fl;
+	fl = freelist;
+	freelist = 0;
+	assert(!page_alloc(0));
+	page_free(pp0);
+	page_free(pp1);
+	page_free(pp2);
+	pp0 = pp1 = pp2 = 0;
+	assert((pp0 = page_alloc(0)));
+	assert((pp1 = page_alloc(0)));
+	assert((pp2 = page_alloc(0)));
+	assert(pp0);
+	assert(pp1 && pp1 != pp0);
+	assert(pp2 && pp2 != pp1 && pp2 != pp0);
+	assert(!page_alloc(0));
+	memset(pp2pa(pp0),1,PGSIZE);
+	page_free(pp0);
+	assert((pp = page_alloc(1)));
+	assert(pp && pp0 == pp);
+	char *c = pp2pa(pp);
+	for(int i = 0 ; i < PGSIZE ; i++){
+		assert(c[i] == 0);
+	}
+
+	freelist = fl;
+	page_free(pp0);
+	page_free(pp1);
+	page_free(pp2);
+
+	for (pp = freelist; pp; pp = pp->next)
+		--nfree;
+	assert(nfree == 0);
+}
+void memorytest2(){
+	struct physpage *pp,*pp0,*pp1,*pp2;
+	struct physpage *fl;
+	struct pte *ptep,*ptep1;
+
+	void *va;
+	void *mm1,*mm2;
+	int i;
+
+	pp0 = pp1 = pp2 = 0;
+	assert((pp0 = page_alloc(0)));
+	assert((pp1 = page_alloc(0)));
+	assert((pp2 = page_alloc(0)));
+
+	assert(pp0);
+	assert(pp1 && pp1 != pp0);
+	assert(pp2 && pp2 != pp1 && pp2 != pp0);
+	fl = freelist;
+	freelist = 0;
+	assert(!page_alloc(0));
+	assert(!page_lookup(master_pde, (void *) 0x0, &ptep) == 0);;
+	for(int i = 0 ; i < 0x400; i++){
+		unsigned int tmp = i * 0x1000;
+		void *va = (void *)va;
+		assert(!page_lookup(master_pde, va, &ptep) == 0);
+	}
+
+	assert(page_insert(master_pde, pp1, 0xc0000000, 1,0) < 0);
+
+	page_free(pp0);
+	assert(page_insert(master_pde, pp1, 0xc0000000, 1,0) == 0);
 }

@@ -13,7 +13,7 @@
 #define ENTER_KEY_CODE 0x1C
 
 unsigned int tick = 0;
-
+unsigned int ext_max;
 extern unsigned char keyboard_map[128];
 
 extern char read_port(unsigned short port);
@@ -81,6 +81,9 @@ void test_mem(multiboot_info *info){
 
 	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
 		kprintf("range %x %x, type %d\n",mmap -> base_addr_low, mmap -> length_low, mmap -> type);
+		if(mmap -> base_addr_low == 0x100000){
+			ext_max = mmap -> base_addr_low + mmap->length_low;
+		}
 	}
 
 

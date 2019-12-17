@@ -1,0 +1,1 @@
+#define assert(x) if(!(x)){kprintf("%s\n",#x);panic();}
