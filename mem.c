@@ -63,34 +63,33 @@ void mem_init(){
 	framelist = (struct physpage *)alloc_mem((ext_max/0x1000) * sizeof(struct physpage));
 
 
-	struct pte* pte_p = (struct pte *)alloc_mem(0x1000);
-	master_pde -> all = 0;
-	master_pde -> present = 1;
-	master_pde -> rw = 1;
-	master_pde -> off = ((unsigned int)pte_p / PGSIZE);
 
-	for(unsigned int i = 0x0 ; i < 0x400 ; i++){
+	for(int i = 0; i < ext_max / PGSIZE ;i++){
+		if(i < 0xa0000 / PGSIZE){
+			framelist[i].use = 0;
+			framelist[i].next = freelist;
+			freelist = &framelist[i];
+		}
+		else if(i >= 0xa0000 && i < 0x400000){
+			framelist[i].use = 1;
+			continue;
+		}
+		else{
+			framelist[i].use = 0;
+			framelist[i].next = freelist;
+			freelist = &framelist[i];
+		}
 
-		pte_p -> all = 0;
-		pte_p -> present = 1;
-		pte_p -> rw = 1;
-		pte_p -> off = i;
-		pte_p++;
 	}
+
+
+	map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
+	map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
+	map_region(master_pde, 0xc0100000, (0x400000 - 0x100000), 0x100000,1,0);
 
 
 	//assert(ext_max == 0x7fe0000)
 	//0x7fe0000 / 0x1000 = 32496
-	for(int i = 0; i < ext_max / PGSIZE ;i++){
-		if(i < 0x400000/PGSIZE){
-			framelist[i].use = 1;
-			continue;
-		}
-		framelist[i].use = 0;
-		framelist[i].next = freelist;
-		freelist = &framelist[i];
-
-	}
 
 	memorytest1();
 	memorytest2();
@@ -138,13 +137,16 @@ void page_decref(struct physpage *pp){
 	}
 }
 
-struct pte* find_pte(struct pde* root, void *va){
+struct pte* find_pte(struct pde* root, void *va,int create){
 	struct pde *pde_p = &root[pde_idx(va)];
 	struct pte *ret;
 	if(pde_p -> present == 1){
 		struct pte *pte_top = (void *)(pde_p -> off * PGSIZE);
 		ret = &pte_top[pte_idx(va)];
 		return ret;
+	}
+	else if(!create){
+		return 0;
 	}
 	else{
 		struct physpage *new = page_alloc(1);
@@ -154,7 +156,7 @@ struct pte* find_pte(struct pde* root, void *va){
 		else{
 			new -> use++;
 			root[pde_idx(va)].all = 0;
-			root[pde_idx(va)].off = (unsigned int)pp2pa(new);
+			root[pde_idx(va)].off = (unsigned int)pp2pa(new) / PGSIZE;
 			root[pde_idx(va)].present = 1;
 			root[pde_idx(va)].rw = 1;
 			struct pte *pte_top = (struct pte *)pp2pa(new);
@@ -165,7 +167,7 @@ struct pte* find_pte(struct pde* root, void *va){
 }
 
 struct physpage *page_lookup(struct pde *root, void *va, struct pte **pte_store){
-	struct pte *pte_p = find_pte(root,va);
+	struct pte *pte_p = find_pte(root,va,0);
 	if(pte_p != 0 && pte_p -> present){
 		void *pa = (void *)(pte_p -> off * PGSIZE);
 		struct physpage *ret = pa2pp(pa);
@@ -201,7 +203,7 @@ void page_remove(struct pde *root, void *va){
 
 
 int page_insert(struct pde *root, struct physpage* pp, void *va, int rw,int us){
-	struct pte * pte_p = find_pte(root,va);
+	struct pte * pte_p = find_pte(root,va,1);
 	if(pte_p == 0){
 		return -1;
 	}
@@ -221,8 +223,9 @@ int page_insert(struct pde *root, struct physpage* pp, void *va, int rw,int us){
 
 void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us){
 	for(int i = 0 ; i < size / PGSIZE ; i++){
-		struct pte *pte_p = find_pte(root,va);
+		struct pte *pte_p = find_pte(root,va,1);
 		if(!pte_p){
+			kprintf("find_pte failed : %d!!!!\n",i);
 			panic();
 		}
 		pte_p -> off = (unsigned int)pa / 0x1000;
@@ -307,15 +310,8 @@ void memorytest2(){
 	fl = freelist;
 	freelist = 0;
 	assert(!page_alloc(0));
-	assert(!page_lookup(master_pde, (void *) 0x0, &ptep) == 0);;
-	for(int i = 0 ; i < 0x400; i++){
-		unsigned int tmp = i * 0x1000;
-		void *va = (void *)va;
-		assert(!page_lookup(master_pde, va, &ptep) == 0);
-	}
+	assert(page_lookup(master_pde, (void *)0x0, &ptep) == 0);
 
-	assert(page_insert(master_pde, pp1, 0xc0000000, 1,0) < 0);
+	assert(page_insert(master_pde, pp1, (void *)0, 1,0) < 0);
 
-	page_free(pp0);
-	assert(page_insert(master_pde, pp1, 0xc0000000, 1,0) == 0);
 }

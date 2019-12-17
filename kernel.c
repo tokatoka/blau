@@ -85,8 +85,6 @@ void test_mem(multiboot_info *info){
 			ext_max = mmap -> base_addr_low + mmap->length_low;
 		}
 	}
-
-
 }
 
 void kmain(unsigned long magic,multiboot_info *info)
@@ -103,6 +101,8 @@ void kmain(unsigned long magic,multiboot_info *info)
 	allow_intr();
 	mem_init();
 	enable_paging();
+
+
 
 	interactive();
 }

@@ -43,6 +43,10 @@ void kprint(const char *str)
 void kint2dec(unsigned int i){
 	unsigned int victim = 1000000000;
 	char begin = 0;
+	if(i == 0){
+		kput_char('0');
+		return;
+	}
 	for(int it = 1 ; it <= 10; it++){
 		unsigned int value = i / victim;
 		if(value == 0 && begin == 0){
