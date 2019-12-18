@@ -75,14 +75,17 @@ void DBLFLT_handler_main()
 }
 
 
-void test_mem(multiboot_info *info){
+void test_mem(multiboot_info *info,unsigned int print){
+	if(print){
+		kprintf("beginning memory test\n");
+		kprintf("lower: %x\n",info->mem_lower);
+		kprintf("upper: %x\n",info->mem_upper);
+	}
 
-	kprintf("beginning memory test\n");
-	kprintf("lower: %x\n",info->mem_lower);
-	kprintf("upper: %x\n",info->mem_upper);
 
 	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
-		kprintf("range %x %x, type %d\n",mmap -> base_addr_low, mmap -> length_low, mmap -> type);
+		
+		if(print)kprintf("range %x %x, type %d\n",mmap -> base_addr_low, mmap -> length_low, mmap -> type);
 		if(mmap -> base_addr_low == 0x100000){
 			ext_max = mmap -> base_addr_low + mmap->length_low;
 		}
@@ -93,12 +96,12 @@ void kmain(unsigned long magic,multiboot_info *info)
 {
 	disable_cursor();
 	clear_screen();
-	kprintf("%s %s %d %x\n","blau","kernel",114514,1131796);
+	kprintf("%s %s\n","blau","kernel");
 	if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
 		kprintn("invalid multiboot magic!");
 	}
 
-	test_mem(info);
+	test_mem(info,0);
 	idt_init();
 	allow_intr();
 	mem_init();

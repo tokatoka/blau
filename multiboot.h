@@ -1,3 +1,5 @@
+#ifndef BLAU_MULTIBOOT_H
+#define BLAU_MULTIBOOT_H
 #define MULTIBOOT_BOOTLOADER_MAGIC          0x2BADB002
 
 
@@ -29,3 +31,4 @@ typedef struct memory_map {
   unsigned long type;
 } __attribute__((__packed__)) memory_map;
 
+#endif

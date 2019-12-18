@@ -103,11 +103,11 @@ void mem_init(){
 	//memorytest2();
 
 
-	boot_map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
+	boot_map_region(master_pde, (void *)0xa0000, (0x100000 - 0xa0000), (void *)0xa0000, 1, 0);
 	//map IO hole
-	boot_map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
+	boot_map_region(master_pde, (void *)0x100000, (0x400000 - 0x100000), (void *)0x100000, 1, 0);
 	//map kern memory
-	boot_map_region(master_pde, 0xc0100000, (0xa000000 - 0x100000), 0x100000,1,0);
+	boot_map_region(master_pde, (void *)0xc0100000, (0xa000000 - 0x100000), (void *)0x100000,1,0);
 	//map all physical memory upto 0x7fe0000
 
 	//assert(ext_max == 0x7fe0000)
