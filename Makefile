@@ -1,4 +1,4 @@
-blau: kernel.c kernel.asm link.ld
+blau: kernel.c kernel.asm link.ld mem.c
 	nasm -f elf32 kernel.asm -o kasm.o
 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c kernel.c -o kc.o
 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c io.c -o io.o
