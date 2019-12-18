@@ -79,7 +79,6 @@ void DBLFLT_handler_main()
 
 void test_mem(multiboot_info *info,unsigned int print){
 	if(print){
-		kprintf("beginning memory test\n");
 		kprintf("lower: %x\n",info->mem_lower);
 		kprintf("upper: %x\n",info->mem_upper);
 	}
@@ -102,14 +101,17 @@ void kmain(unsigned long magic,multiboot_info *info)
 	if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
 		kprintn("invalid multiboot magic!");
 	}
-
+	lldt(0);
+	kprintf("checking available memory...\n");
 	test_mem(info,0);
+	kprintf("initializing IDT...\n");
 	idt_init();
 	allow_intr();
+	kprintf("initializing virtual memory...\n");
 	mem_init();
 	enable_paging();
 	paging_enabled = 1;
-	kprintf("%x\n",check_gdt());
+	kprintf("initializing tasks...\n");
 	task_init();
 
 	interactive();
