@@ -89,11 +89,7 @@ void mem_init(){
 
 
 
-	map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
-	//map IO hole
-	map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
-	//map kern memory
-	map_region(master_pde, 0xc0100000, (0x1000000 - 0x100000), 0x100000,1,0);
+	map_region(master_pde, 0x0, 0x10000000, 0x0,1,0);
 	//map all physical memory upto 0x7fe0000
 
 	//assert(ext_max == 0x7fe0000)
@@ -241,17 +237,4 @@ void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw
 		va = va + PGSIZE;
 		pa = pa + PGSIZE;
 	}
-}
-
-unsigned int check_vapa(struct pde *root,void *va){
-	struct pte *p;
-	root = &root[pde_idx(va)];
-	if(!(root -> present)){
-		return -1;
-	}
-	p = (struct pte *)(root->off * PGSIZE);
-	if(!p[pte_idx(va)].present){
-		return -1;
-	}
-	return p[pte_idx(va)].off * PGSIZE;
 }

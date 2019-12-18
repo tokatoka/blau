@@ -163,10 +163,6 @@ enable_paging:
 	mov eax,cr0
 	or eax,0x80000000
 	mov cr0,eax
-	pop eax
-	push eax
-	add eax, 0xc0000000
-	jmp eax
 	ret
 
 haltloop:
