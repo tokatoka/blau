@@ -23,6 +23,7 @@ extern void read_gdt(char *);
 extern void enable_paging();
 
 extern unsigned int paging_enabled;
+extern struct pde* master_pde;
 extern char* vidptr;
 extern unsigned int current_loc;
 char *gdt_entry;
@@ -104,8 +105,5 @@ void kmain(unsigned long magic,multiboot_info *info)
 	enable_paging();
 	paging_enabled = 1;
 
-
-
-	memorytest3();
 	interactive();
 }

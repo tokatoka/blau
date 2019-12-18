@@ -1,3 +1,5 @@
+#ifndef BLAU_IO_H
+#define BLAU_IO_H
 void kprint(const char *str);
 void kprint_newline(void);
 void clear_screen(void);
@@ -10,3 +12,4 @@ unsigned char kread_from_queue();
 void interactive();
 void kprintn(const char *str);
 void kprintf(char *,...);
+#endif

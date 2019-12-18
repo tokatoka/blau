@@ -1,3 +1,6 @@
+#ifndef BLAU_MEM_H
+#define BLAU_MEM_H
+
 struct pte{
 	union{
 		struct{
@@ -47,8 +50,8 @@ struct physpage{
 
 void mem_init();
 struct physpage *page_alloc();
-void memorytest1();
-void memorytest2();
-void memorytest3();
 void *pp2pa(struct physpage *);
-void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us);
+void boot_map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us);
+unsigned int va2pa(struct pde *root,void *va);
+
+#endif

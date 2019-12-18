@@ -1,3 +1,5 @@
+#ifndef BLAU_FIFO_H
+#define BLAU_FIFO_H
 struct fifo32{
 	unsigned int buf[0x400];
 	unsigned int p;
@@ -8,3 +10,4 @@ struct fifo32{
 void push_fifo32(struct fifo32 *,unsigned int);
 unsigned int pop_fifo32(struct fifo32 *);
 void init_fifo32(struct fifo32 *);
+#endif

@@ -2,6 +2,7 @@
 #include "util.h"
 #include "io.h"
 #include "assert.h"
+#include "task.h"
 
 #define PGSIZE 0x1000
 #define NPDENTRIES 1024
@@ -98,15 +99,15 @@ void mem_init(){
 
 
 
-	memorytest1();
-	memorytest2();
+	//memorytest1();
+	//memorytest2();
 
 
-	map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
+	boot_map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
 	//map IO hole
-	map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
+	boot_map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
 	//map kern memory
-	map_region(master_pde, 0xc0100000, (0xa000000 - 0x100000), 0x100000,1,0);
+	boot_map_region(master_pde, 0xc0100000, (0xa000000 - 0x100000), 0x100000,1,0);
 	//map all physical memory upto 0x7fe0000
 
 	//assert(ext_max == 0x7fe0000)
@@ -251,7 +252,7 @@ int page_insert(struct pde *root, struct physpage* pp, void *va, int rw,int us){
 }
 
 
-void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us){
+void boot_map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us){
 	for(int i = 0 ; i < size / PGSIZE ; i++){
 		struct pte *pte_p = find_pte(root,va,1);
 		if(!pte_p){
@@ -266,7 +267,9 @@ void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw
 		pa = pa + PGSIZE;
 	}
 }
-unsigned int check_vapa(struct pde *root,void *va){
+
+
+unsigned int va2pa(struct pde *root,void *va){
 	struct pte *p;
 	root = &root[pde_idx(va)];
 	if(!(root -> present)){
@@ -279,5 +282,5 @@ unsigned int check_vapa(struct pde *root,void *va){
 	if(!p[pte_idx(va)].present){
 		return -1;
 	}
-	return p[pte_idx(va)].off * PGSIZE;
+	return (unsigned int)(p[pte_idx(va)].off * PGSIZE + ((unsigned int)va & 0xfff));
 }
