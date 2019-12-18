@@ -215,6 +215,10 @@ struct physpage *page_lookup(struct pde *root, void *va, struct pte **pte_store)
 }
 
 
+void invlpg(void *va){
+	__asm__ volatile("invlpg (%0)" : : "r" (va) : "memory");
+}
+
 void tlb_invalidate(struct pde *root, void *va){
 	invlpg(va);
 }
