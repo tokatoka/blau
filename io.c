@@ -62,10 +62,9 @@ void kint2dec(unsigned int i){
 	}
 }
 
+
 void kint2hex(unsigned int i){
 	unsigned int victim = 0xf0000000;
-	kput_char('0');
-	kput_char('x');
 	for(int it = 1 ; it <= 8 ; it++){
 		unsigned int value = victim & i;
 		value = value >> (32 - 4 * it);
@@ -150,6 +149,8 @@ void kprintf(char *fmt,...){
 					kint2dec(*((unsigned *) arg++));
 					break;
 				case 'x':
+					kput_char('0');
+					kput_char('x');
 					kint2hex(*((unsigned *) arg++));
 					break;
 				case 's':

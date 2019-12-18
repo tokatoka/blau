@@ -188,11 +188,11 @@ gdt_descr:
 	dw 	0
 
 gdt:
-	dq	0x0000000000000000
-	dq	0x00cf9a000000ffff
-	dq	0x00cf92000000ffff
-	dq	0x00cffa000000ffff
-	dq	0x00cff2000000ffff
+	dq	0x0000000000000000 ;NULL
+	dq	0x00cf9a000000ffff ;kernel code
+	dq	0x00cf92000000ffff ;kernel stack
+	dq	0x00cffa000000ffff ;user code
+	dq	0x00cff2000000ffff ;user stack
 	dq  0
 	dq  0
 	dq  0

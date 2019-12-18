@@ -3,6 +3,7 @@
 #include "io.h"
 #include "assert.h"
 #include "task.h"
+#include "cpu.h"
 
 #define PGSIZE 0x1000
 #define NPDENTRIES 1024
@@ -11,11 +12,12 @@
 #define KERNBASE 0xc0000000
 
 char *next_free;
-struct physpage *freelist;
+struct physpage *freeframelist;
 struct physpage *framelist;
 struct pde *master_pde;
 unsigned int ext_max;
 unsigned int paging_enabled = 0;
+extern struct task* tasklist;
 
 void *kaddr(void *va){
 	return (void *)(KERNBASE + (unsigned int)va);
@@ -74,16 +76,16 @@ void mem_init(){
 	}
 
 	next_free = (void *)0x200000;
-	freelist=0;
+	freeframelist=0;
 	framelist = (struct physpage *)alloc_mem((ext_max/0x1000) * sizeof(struct physpage));
-
+	tasklist = (struct task *)alloc_mem(MAX_TASKS * sizeof(struct task));
 
 
 	for(int i = 0; i < ext_max / PGSIZE ;i++){
 		if(i < 0xa0000 / PGSIZE){
 			framelist[i].use = 0;
-			framelist[i].next = freelist;
-			freelist = &framelist[i];
+			framelist[i].next = freeframelist;
+			freeframelist = &framelist[i];
 		}
 		else if(i >= 0xa0000 && i < 0x400000){
 			framelist[i].use = 1;
@@ -91,8 +93,8 @@ void mem_init(){
 		}
 		else{
 			framelist[i].use = 0;
-			framelist[i].next = freelist;
-			freelist = &framelist[i];
+			framelist[i].next = freeframelist;
+			freeframelist = &framelist[i];
 		}
 
 	}
@@ -117,20 +119,20 @@ void mem_init(){
 }
 
 struct physpage *page_alloc(unsigned int zero){
-	if(!freelist){
+	if(!freeframelist){
 		return 0;
 	}
 	else{
-		struct physpage *ret = freelist;
+		struct physpage *ret = freeframelist;
 		if(zero){
 			if(paging_enabled){
-				memset((char *)pp2kva(ret),0,0x1000);
+				kmemset((char *)pp2kva(ret),0,0x1000);
 			}
 			else{
-				memset((char *)pp2pa(ret),0,0x1000);
+				kmemset((char *)pp2pa(ret),0,0x1000);
 			}
 		}
-		freelist = ret->next;
+		freeframelist = ret->next;
 		ret->next = 0;
 		return ret;
 	}
@@ -145,8 +147,8 @@ void page_free(struct physpage *pp){
 		kprintf("link not deleted! \n");
 		panic();
 	}
-	pp -> next = freelist;
-	freelist = pp;
+	pp -> next = freeframelist;
+	freeframelist = pp;
 }
 
 void page_decref(struct physpage *pp){
