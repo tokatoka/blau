@@ -7,3 +7,8 @@
 	https://pdos.csail.mit.edu/6.828/2018/
 	http://yuma.ohgami.jp/Ohgamis-Commentary-on-OS5/index.html
 	https://wocota.hatenadiary.org/
+# TODO
++ [x] virtual memory
++ [ ] schedule userland tasks
++ [ ] add syscalls
++ [ ] handle ethernet traffics
