@@ -49,5 +49,6 @@ void mem_init();
 struct physpage *page_alloc();
 void memorytest1();
 void memorytest2();
+void memorytest3();
 void *pp2pa(struct physpage *);
 void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us);

@@ -103,6 +103,5 @@ void kmain(unsigned long magic,multiboot_info *info)
 	enable_paging();
 
 
-
 	interactive();
 }

@@ -4,6 +4,11 @@
 #include "assert.h"
 
 #define PGSIZE 0x1000
+#define NPDENTRIES 1024
+#define NPTENTRIES 1024
+#define PTSIZE (PGSIZE * NPTENTRIES)
+
+
 char *next_free;
 struct physpage *freelist;
 struct physpage *framelist;
@@ -83,16 +88,17 @@ void mem_init(){
 	}
 
 
-	map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
-	map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
-	map_region(master_pde, 0xc0100000, (0x400000 - 0x100000), 0x100000,1,0);
 
+	map_region(master_pde, 0xa0000, (0x100000 - 0xa0000), 0xa0000, 1, 0);
+	//map IO hole
+	map_region(master_pde, 0x100000, (0x400000 - 0x100000), 0x100000, 1, 0);
+	//map kern memory
+	map_region(master_pde, 0xc0100000, (0x1000000 - 0x100000), 0x100000,1,0);
+	//map all physical memory upto 0x7fe0000
 
 	//assert(ext_max == 0x7fe0000)
 	//0x7fe0000 / 0x1000 = 32496
 
-	memorytest1();
-	memorytest2();
 
 }
 
@@ -237,6 +243,24 @@ void map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw
 	}
 }
 
+unsigned int check_vapa(struct pde *root,void *va){
+	struct pte *p;
+	root = &root[pde_idx(va)];
+	if(!(root -> present)){
+		return -1;
+	}
+	p = (struct pte *)(root->off * PGSIZE);
+	if(!p[pte_idx(va)].present){
+		return -1;
+	}
+	return p[pte_idx(va)].off * PGSIZE;
+}
+
+/*
+test1 and test2 should be executed before enabling paging
+test3 should be executed after enabling it.
+ */
+
 void memorytest1(){
 
 	if(!freelist){
@@ -296,8 +320,6 @@ void memorytest2(){
 	struct pte *ptep,*ptep1;
 
 	void *va;
-	void *mm1,*mm2;
-	int i;
 
 	pp0 = pp1 = pp2 = 0;
 	assert((pp0 = page_alloc(0)));
@@ -310,8 +332,125 @@ void memorytest2(){
 	fl = freelist;
 	freelist = 0;
 	assert(!page_alloc(0));
-	assert(page_lookup(master_pde, (void *)0x0, &ptep) == 0);
-
+	assert(page_lookup(master_pde, (void *)0, &ptep) == 0);
 	assert(page_insert(master_pde, pp1, (void *)0, 1,0) < 0);
+	page_free(pp0);
+	assert(page_insert(master_pde, pp1, (void *)0, 1,0) == 0);
+	assert(master_pde[0].off * PGSIZE == (unsigned int)pp2pa(pp0));
+	assert(check_vapa(master_pde, 0) == pp2pa(pp1));
+	assert(pp1->use == 1);
+	assert(pp0->use == 1);
 
+	assert(page_insert(master_pde, pp2, (void*) PGSIZE, 1,0) == 0);
+	assert(check_vapa(master_pde, PGSIZE) == pp2pa(pp2));
+	assert(pp2->use ==1);
+	assert(!page_alloc(0));
+
+	assert(page_insert(master_pde, pp2, (void*) PGSIZE, 1,0) == 0);
+	assert(check_vapa(master_pde, PGSIZE) == pp2pa(pp2));
+	assert(pp2->use ==1);
+
+	assert(!page_alloc(0));
+
+	ptep = (struct pte *)(master_pde[pde_idx(PGSIZE)].off * PGSIZE);
+	assert(find_pte(master_pde,PGSIZE,0) == ptep + pte_idx(PGSIZE));
+
+	assert(page_insert(master_pde, pp2, (void*) PGSIZE, 1,1) == 0);
+	assert(check_vapa(master_pde, PGSIZE) == pp2pa(pp2));
+	assert(pp2->use ==1);
+	assert(find_pte(master_pde,PGSIZE,0)->us);
+	assert(master_pde[0].us);
+
+	assert(page_insert(master_pde, pp2, (void*) PGSIZE, 1,0) == 0);
+	assert(find_pte(master_pde,PGSIZE,0)->rw);
+	assert(!find_pte(master_pde,PGSIZE,0)->us);
+
+	assert(page_insert(master_pde, pp0, (void*) PTSIZE, 1,0) < 0);
+
+	assert(page_insert(master_pde, pp1, (void*) PGSIZE, 1,0) == 0);
+	assert(!find_pte(master_pde,PGSIZE,0)->us);
+	assert(check_vapa(master_pde, 0) == pp2pa(pp1));
+	assert(check_vapa(master_pde, PGSIZE) == pp2pa(pp1));
+
+
+	assert(pp1->use ==2);
+	assert(pp2->use ==0);
+
+	assert((pp = page_alloc(0)) && pp == pp2);
+	page_remove(master_pde, 0x0);
+	assert(check_vapa(master_pde, 0x0) == -1);
+	assert(check_vapa(master_pde, PGSIZE) == pp2pa(pp1));
+	assert(pp1->use ==1);
+	assert(pp2->use ==0);
+
+	assert(page_insert(master_pde, pp1, (void*) PGSIZE, 1,0) == 0);
+	assert(pp1->use);
+	assert(pp1->next == 0);
+
+	page_remove(master_pde, PGSIZE);
+	assert(check_vapa(master_pde,0) == -1);
+	assert(check_vapa(master_pde,PGSIZE) == -1);
+	assert(pp1->use == 0);
+	assert(pp2->use == 0);
+
+	assert((pp = page_alloc(0)) && pp == pp1);
+	assert(!page_alloc(0));
+
+	assert((void *)(master_pde[0].off * PGSIZE) == pp2pa(pp0));
+	master_pde[0].all = 0;
+	assert(pp0->use == 1);
+	pp0 -> use = 0;
+	page_free(pp0);
+	va = (void*)(PGSIZE * NPDENTRIES + PGSIZE);
+	ptep = find_pte(master_pde,va,1);
+	ptep1 = (struct pte *)(master_pde[pde_idx(va)].off * PGSIZE);
+	assert(ptep == ptep1 + pte_idx(va));
+	master_pde[pde_idx(va)].all = 0;
+	pp0 -> use = 0;
+
+	memset(pp2pa(pp0),0xff,PGSIZE);
+	page_free(pp0);
+	find_pte(master_pde,0,1);
+	ptep = (struct pte *)pp2pa(pp0);
+	for(int i = 0 ; i < NPTENTRIES ; i++){
+		assert(ptep[i].present == 0);
+	}
+	master_pde[0].all = 0;
+	pp0->use = 0;
+	freelist = fl;
+	page_free(pp0);
+	page_free(pp1);
+	page_free(pp2);
+}
+
+void memorytest3(){
+	struct physpage *pp,*pp0,*pp1,*pp2;
+	struct physpage *fl;
+	struct pte *ptep,*ptep1;
+
+	void *va;
+	pp1 = pp2 = 0;
+	assert((pp0 = page_alloc(0)));
+	assert((pp1 = page_alloc(0)));
+	assert((pp2 = page_alloc(0)));
+	page_free(pp0);
+	memset(pp2pa(pp1),1,PGSIZE);
+	memset(pp2pa(pp2),2,PGSIZE);
+
+	page_insert(master_pde,pp1,PGSIZE,1,0);
+	assert(pp1->use == 1);
+	assert(*(unsigned int *)PGSIZE == 0x01010101U);
+	page_insert(master_pde,pp2,PGSIZE,1,0);
+	assert(*(unsigned int *)PGSIZE == 0x02020202U);
+	assert(pp2->use == 1);
+	assert(pp1->use == 0);
+	*(unsigned int *)PGSIZE = 0x03030303U;
+	assert(*(unsigned int *)pp2pa(pp2) == 0x03030303U);
+	page_remove(master_pde,(void *)PGSIZE);
+	assert(pp2->use == 0);
+	assert(master_pde[0].off * PGSIZE == pp2pa(pp0));
+	master_pde[0].all = 0;
+	assert(pp0->use == 1);
+	pp0 -> use = 0;
+	page_free(pp0);
 }
