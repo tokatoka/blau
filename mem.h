@@ -1,6 +1,15 @@
 #ifndef BLAU_MEM_H
 #define BLAU_MEM_H
 
+#define PGSIZE 0x1000
+#define NPDENTRIES 1024
+#define NPTENTRIES 1024
+#define PTSIZE (PGSIZE * NPTENTRIES)
+#define KERNBASE 0xc0000000
+#define FRAMELIST_VA 0xbfc00000
+#define TASKLIST_VA 0xbf800000
+
+
 struct pte{
 	union{
 		struct{

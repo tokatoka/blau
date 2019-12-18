@@ -5,12 +5,6 @@
 #include "task.h"
 #include "cpu.h"
 
-#define PGSIZE 0x1000
-#define NPDENTRIES 1024
-#define NPTENTRIES 1024
-#define PTSIZE (PGSIZE * NPTENTRIES)
-#define KERNBASE 0xc0000000
-
 char *next_free;
 struct physpage *freeframelist;
 struct physpage *framelist;
@@ -111,7 +105,8 @@ void mem_init(){
 	//map kern memory
 	boot_map_region(master_pde, (void *)0xc0100000, (0xa000000 - 0x100000), (void *)0x100000,1,0);
 	//map all physical memory upto 0x7fe0000
-
+	boot_map_region(master_pde, (void *)FRAMELIST_VA,0x400000, (void *)framelist,0,1);
+	boot_map_region(master_pde,(void *)TASKLIST_VA,0x400000,(void *)tasklist,0,1);
 	//assert(ext_max == 0x7fe0000)
 	//0x7fe0000 / 0x1000 = 32496
 

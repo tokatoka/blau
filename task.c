@@ -1,5 +1,5 @@
 #include "task.h"
-
+#include "mem.h"
 struct task *tasklist = 0;
 struct task *current_task = 0;
 struct task *freetasklist;

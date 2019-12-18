@@ -44,6 +44,7 @@ extern keyboard_handler_main
 extern timer_handler_main
 extern kernel_panic
 extern DBLFLT_handler_main
+extern PGFLT_handler_main
 extern panic
 
 read_port:
@@ -126,7 +127,11 @@ GPFLT_handler:
 	iret
 
 PGFLT_handler:
-	jmp PGFLT_handler
+	pusha
+	mov eax, cr2
+	push eax
+	call PGFLT_handler_main
+	popa
 	iret
 
 FPERR_handler:
@@ -161,7 +166,7 @@ enable_paging:
 	mov eax,0x1ff000
 	mov cr3,eax
 	mov eax,cr0
-	or eax,0x80000000
+	or eax,0x80050020 ;enable paging, numeric error,alignment mask
 	mov cr0,eax
 	pop eax
 	push eax

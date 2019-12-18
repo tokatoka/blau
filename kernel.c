@@ -73,9 +73,13 @@ void disable_cursor()
 void DBLFLT_handler_main()
 {
 	kprintf("double fault!!\n");
-	while(1);
+	panic();
 }
 
+void PGFLT_handler_main(unsigned int *addr){
+	kprintf("page_fault at addr %x\n",addr);
+	panic();
+}
 
 void test_mem(multiboot_info *info,unsigned int print){
 	if(print){
@@ -111,6 +115,9 @@ void kmain(unsigned long magic,multiboot_info *info)
 	paging_enabled = 1;
 	kprintf("%x\n",check_gdt());
 	task_init();
+
+	char *a = (char *)FRAMELIST_VA;
+	*a = 0xdeadbeef;
 
 	interactive();
 }
