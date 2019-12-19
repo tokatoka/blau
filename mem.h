@@ -8,7 +8,9 @@
 #define KERNBASE 0xc0000000
 #define FRAMELIST_VA 0xbfc00000
 #define TASKLIST_VA 0xbf800000
-
+#define TASKPGDIR 0xbf4000000
+#define UTOP 0xbf000000
+#define USTACK 0xb0000000
 
 struct pte{
 	union{
@@ -60,7 +62,9 @@ struct physpage{
 void mem_init();
 struct physpage *page_alloc();
 void *pp2pa(struct physpage *);
+void *pp2kva(struct physpage *pp);
 void boot_map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us);
 unsigned int va2pa(struct pde *root,void *va);
-
+unsigned int pde_idx(void *va);
+void *paddr(void *va);
 #endif

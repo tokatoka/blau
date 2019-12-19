@@ -166,7 +166,7 @@ enable_paging:
 	mov eax,0x1ff000
 	mov cr3,eax
 	mov eax,cr0
-	or eax,0x80050020 ;enable paging, numeric error,alignment mask
+	or eax,0x80050020 ;enable paging, numeric error,alignment mask,write protect
 	mov cr0,eax
 	pop eax
 	push eax

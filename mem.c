@@ -13,8 +13,13 @@ unsigned int ext_max;
 unsigned int paging_enabled = 0;
 extern struct task* tasklist;
 
-void *kaddr(void *va){
-	return (void *)(KERNBASE + (unsigned int)va);
+void *kaddr(void *pa){
+	return (void *)(KERNBASE + (unsigned int)pa);
+}
+
+void *paddr(void *va){
+	assert((unsigned int)va >= KERNBASE);
+	return (void *)((unsigned int)va - KERNBASE);
 }
 
 unsigned int pde_idx(void *va){
