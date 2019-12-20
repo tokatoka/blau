@@ -9,6 +9,7 @@
 	https://wocota.hatenadiary.org/
 # TODO
 + [x] virtual memory
-+ [ ] schedule userland tasks
-+ [ ] add syscalls
++ [x] jump to ring3
++ [ ] add scheduler
++ [x] add syscalls
 + [ ] handle ethernet traffics
