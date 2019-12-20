@@ -39,6 +39,7 @@ global ALIGN_handler
 global enable_paging
 global haltloop
 global read_eflags
+global load_master_pde
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main

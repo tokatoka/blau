@@ -65,13 +65,15 @@ struct task{
 
 #define PASTE3(x, y, z) x ## y ## z
 
-#define GEN_TASK(x)						\
+#define GEN_TASK(x,id)						\
 	do {								\
 		extern char PASTE3(_binary_user_, x, _o_start)[];	\
-		gen_task(PASTE3(_binary_user_, x, _o_start));					\
+		id = gen_task(PASTE3(_binary_user_, x, _o_start));					\
 	} while (0)
 
 
 void task_init();
+void *id2task(unsigned int);
 unsigned int gen_task(void *bin);
+void jump_user_function();
 #endif

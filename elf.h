@@ -1,7 +1,7 @@
 #ifndef BLAU_ELF_H
 #define BLAU_ELF_H
 
-#define EI_NIDENT 16
+#define EI_NIDENT 12
 #define ELFMAGIC 0x464C457F
 struct ELF{
         unsigned int    magic;

@@ -114,6 +114,9 @@ void kmain(unsigned long magic,multiboot_info *info)
 	paging_enabled = 1;
 	task_init();
 
-	GEN_TASK(simple);
+	unsigned int id = 0;
+	GEN_TASK(simple,id);
+	kprintf("test task generated!\n");
+	jump_user_function(id2task(id));
 	interactive();
 }

@@ -9,7 +9,7 @@ struct task *current_task = 0;
 struct task *freetasklist;
 extern struct pde *master_pde;
 char ids[256];
-
+extern void load_master_pde();
 
 void task_init(){
 	freetasklist = 0;
@@ -41,6 +41,9 @@ unsigned int setup_new_tasks(struct task **store, unsigned int parent_id){
 	for(int i = UTOP/PTSIZE; i < 1024 ; i++){
 		t->pgdir[i].all = master_pde[i].all;
 	}
+	t->pgdir[0].all = master_pde[0].all;
+
+
 	pp->use++;
 
 	t->pgdir[pde_idx((void *)TASKPGDIR)].off = (unsigned int)paddr(t->pgdir) / PGSIZE;
@@ -48,12 +51,11 @@ unsigned int setup_new_tasks(struct task **store, unsigned int parent_id){
 	t->pgdir[pde_idx((void *)TASKPGDIR)].us = 1;
 
 
-	t->id = (char *)t - (char *)tasklist;
+	t->id = ((char *)t - (char *)tasklist)/sizeof(struct task);
 	t->parent_id = parent_id;
 	t->status = TASK_READY;
 
 	kmemset((char *)&t->tss,0,sizeof(t->tss));
-
 
 	t -> tss.es = 0x20 | 3;
 	t -> tss.ss = 0x20 | 3;
@@ -67,14 +69,13 @@ unsigned int setup_new_tasks(struct task **store, unsigned int parent_id){
 void map_region(struct task *t, void *va, unsigned int len){
 	void *start = (void *)rounddown((unsigned int)va, PGSIZE);
 	void *end = (void *)roundup((unsigned int)va + len, PGSIZE);
-
 	for(void *i = start; i < end; i+= PGSIZE){
 		struct physpage *pp = page_alloc(0);
 		if(pp == 0){
 			kprintf("mapping failed\n");
 			panic();
 		}
-		unsigned int ret = page_insert(t->pgdir,pp,(void *)i,0,1);
+		unsigned int ret = page_insert(t->pgdir,pp,(void *)i,1,1);
 		if(ret != 0){
 			kprintf("mapping failed\n");
 			panic();
@@ -112,14 +113,47 @@ unsigned int gen_task(void *bin){
 				kprintf("invalid memsz\n");
 				panic();
 			}
-			map_region(thistask,(void *)ph_start,ph_start->p_memsz);
+			map_region(thistask,(void *)ph_start->p_vaddr,ph_start->p_memsz);
+			kprintf("???\n");
+			char *test = (char *)0x800020;
+			*test = 'a';
+			kprintf("???\n");
 			kmemcpy(ph_start->p_vaddr, (char *)bin + ph_start->p_offset, ph_start->p_filesz);
+			kprintf("???\n");
 			kmemset((void *)ph_start -> p_vaddr + ph_start->p_filesz, 0, ph_start->p_memsz - ph_start->p_filesz);
 		}
 	}
-	//lcr3(paddr(master_pde));
+	kprintf("???\n");
+	lcr3(master_pde);
 	thistask->tss.eip = (unsigned int)elfhdr->e_entry;
 	map_region(thistask,(void *)USTACK-PGSIZE,PGSIZE);
 	return thistask->id;
 }
 
+void *id2task(unsigned int id){
+	return &tasklist[id];
+}
+void jump_user_function(struct task *t){
+	lcr3(paddr(t->pgdir));
+	__asm__ volatile(
+		".intel_syntax noprefix\n"
+		"push 0\n"
+		"push 0\n"
+		"push 0\n"
+		"push 0\n"
+		"push 0\n"
+		"push 0\n"
+		"push 0\n"
+		"popa\n"
+		"mov ax,0x23\n"
+		"mov ds,ax\n"
+		"mov es,ax\n"
+		"push 0x23\n"
+		"push eax\n"
+		"push 0xafffff00\n"
+		"pushf\n"
+		"push 0x1b\n"
+		"push 0x800020\n"
+		"iret\n"
+		);
+}

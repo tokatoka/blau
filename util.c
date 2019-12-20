@@ -21,7 +21,7 @@ unsigned char kmemcmp(char *a,char *b,unsigned int size){
 	return 1;
 }
 
-void kmemcpy(char *src,char *dst,unsigned int size){
+void kmemcpy(char *dst,char *src,unsigned int size){
 	for(int i = 0 ; i < size ; i++){
 		*(dst + i) = *(src + i);
 	}
@@ -54,9 +54,10 @@ unsigned int roundup(unsigned int num, unsigned int n){
 }
 unsigned int rounddown(unsigned int num,unsigned int n){
 	if(num % n == 0){
-		return n;
+		return num;
 	}
 	else{
+
 		unsigned int rem = num % n;
 		return (num - rem);
 	}

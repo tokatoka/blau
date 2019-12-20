@@ -98,8 +98,6 @@ void mem_init(){
 
 	}
 
-
-
 	//memorytest1();
 	//memorytest2();
 
@@ -144,7 +142,7 @@ void page_free(struct physpage *pp){
 		panic();
 	}
 	if(pp -> next != 0){
-		kprintf("link not deleted! \n");
+		kprintf("link not deleted! %x\n",pp);
 		panic();
 	}
 	pp -> next = freeframelist;

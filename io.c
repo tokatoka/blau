@@ -170,6 +170,9 @@ void interactive(){
 			continue;
 		}
 		else{
+			if(keyboard_map[c] == 'q'){
+				break;
+			}
 			kput_char(keyboard_map[c]);
 		}
 	}
