@@ -9,7 +9,8 @@ blau: kernel.c kernel.asm link.ld mem.c
 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c util.c -o util.o
 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c task.c -o task.o
 	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c cpu.c -o cpu.o
-	ld -m elf_i386 -T link.ld -o blau kasm.o kc.o io.o timer.o fifo.o idt.o mem.o util.o task.o cpu.o
+	gcc -m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostdlib -c user/simple.c -o user/simple.o
+	ld -m elf_i386 -T link.ld -o blau kasm.o kc.o io.o timer.o fifo.o idt.o mem.o util.o task.o cpu.o -b binary user/simple.o
 
 run: blau
 	qemu-system-i386 -kernel blau
@@ -21,4 +22,4 @@ monitor: blau
 	qemu-system-i386 -kernel blau -monitor telnet:localhost:44444,server,nowait -enable-kvm
 
 clean:
-	rm -rf blau *.o
+	rm -rf blau *.o user/*.o

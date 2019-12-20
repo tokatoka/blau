@@ -24,6 +24,11 @@ void lldt(unsigned short sel)
 	__asm__ volatile("lldt %0" : : "r" (sel));
 }
 
+void lcr3(void *val)
+{
+	__asm__ volatile("movl %0,%%cr3" : : "r" (val));
+}
+
 void write_tss(struct gdt *g){
 	unsigned int base = (unsigned int)&master_tss;
 	unsigned int limit = sizeof(master_tss);

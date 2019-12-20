@@ -3,6 +3,7 @@
 #include "util.h"
 #include "io.h"
 #include "cpu.h"
+#include "elf.h"
 struct task *tasklist = 0;
 struct task *current_task = 0;
 struct task *freetasklist;
@@ -20,18 +21,7 @@ void task_init(){
 	}
 }
 
-int fetch_id(){
-	for(int i = 0 ; i < 256; i++){
-		if(ids[i] == 0){
-			ids[i] = 1;
-			return i;
-		}
-	}
-	return 0xdeadbeef;
-}
-
-
-unsigned int gen_new_tasks(struct task **store, unsigned int parent_id){
+unsigned int setup_new_tasks(struct task **store, unsigned int parent_id){
 
 	if(freetasklist == 0){
 		return -1;
@@ -58,7 +48,7 @@ unsigned int gen_new_tasks(struct task **store, unsigned int parent_id){
 	t->pgdir[pde_idx((void *)TASKPGDIR)].us = 1;
 
 
-	t->id = fetch_id();
+	t->id = (char *)t - (char *)tasklist;
 	t->parent_id = parent_id;
 	t->status = TASK_READY;
 
@@ -91,3 +81,45 @@ void map_region(struct task *t, void *va, unsigned int len){
 		}
 	}
 }
+
+unsigned int gen_task(void *bin){
+	struct task *thistask;
+	unsigned int ret = setup_new_tasks(&thistask,0);
+	if(ret != 0){
+		kprintf("gen_task failed\n");
+		panic();
+	}
+
+	if(thistask == 0 | bin == 0){
+		kprintf("gen_task failed\n");
+		panic();
+	}
+
+	struct ELF *elfhdr = (struct ELF *)bin;
+	if(elfhdr -> magic != ELFMAGIC){
+		kprintf("%x",elfhdr);
+		kprintf("invalid binary\n");
+		panic();
+	}
+
+	struct Phdr *ph_start = (struct Phdr *)((char *)elfhdr + elfhdr->e_phoff);
+	struct Phdr *ph_end = ph_start + elfhdr -> e_phnum;
+
+	lcr3(paddr(thistask->pgdir));
+	for(; ph_start < ph_end; ph_start++){
+		if(ph_start->p_type == 1){ //load
+			if(ph_start->p_memsz < ph_start->p_filesz){
+				kprintf("invalid memsz\n");
+				panic();
+			}
+			map_region(thistask,(void *)ph_start,ph_start->p_memsz);
+			kmemcpy(ph_start->p_vaddr, (char *)bin + ph_start->p_offset, ph_start->p_filesz);
+			kmemset((void *)ph_start -> p_vaddr + ph_start->p_filesz, 0, ph_start->p_memsz - ph_start->p_filesz);
+		}
+	}
+	//lcr3(paddr(master_pde));
+	thistask->tss.eip = (unsigned int)elfhdr->e_entry;
+	map_region(thistask,(void *)USTACK-PGSIZE,PGSIZE);
+	return thistask->id;
+}
+

@@ -1,5 +1,8 @@
-#define EI_NIDENT 16
+#ifndef BLAU_ELF_H
+#define BLAU_ELF_H
 
+#define EI_NIDENT 16
+#define ELFMAGIC 0x464C457F
 struct ELF{
         unsigned int    magic;
         unsigned char   e_ident[EI_NIDENT];
@@ -16,4 +19,18 @@ struct ELF{
         unsigned short      e_shentsize;
         unsigned short      e_shnum;
         unsigned short      e_shstrndx;
-} Elf32_Ehdr;
+};
+
+struct Phdr {
+        unsigned int      p_type;
+        unsigned int       p_offset;
+        void *      p_vaddr;
+        void *      p_paddr;
+        unsigned int      p_filesz;
+        unsigned int      p_memsz;
+        unsigned int      p_flags;
+        unsigned int      p_align;
+};
+
+
+#endif

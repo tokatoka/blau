@@ -114,5 +114,6 @@ void kmain(unsigned long magic,multiboot_info *info)
 	paging_enabled = 1;
 	task_init();
 
+	GEN_TASK(simple);
 	interactive();
 }

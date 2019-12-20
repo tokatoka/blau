@@ -86,7 +86,7 @@ void mem_init(){
 			framelist[i].next = freeframelist;
 			freeframelist = &framelist[i];
 		}
-		else if(i >= 0xa0000 && i < 0x400000){
+		else if(i >= 0xa0000 / PGSIZE && i < 0x400000 /PGSIZE){
 			framelist[i].use = 1;
 			continue;
 		}

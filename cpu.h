@@ -25,6 +25,7 @@ void *check_gdt();
 void panic();
 void invlpg(void *va);
 void write_tss();
+void lcr3(void *val);
 void lldt(unsigned short);
 unsigned int check_eflags();
 
