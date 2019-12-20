@@ -12,7 +12,9 @@
 
 #include "./io.h"
 #include "timer.h"
-
+#include "task.h"
+#include "util.h"
+#include "cpu.h"
 
 extern void keyboard_handler(void);
 extern void timer_handler(void);
@@ -138,4 +140,9 @@ void idt_init(void)
 
 
 	load_idt(idt_ptr);
+	struct gdt* gdt_arr= (struct gdt *)check_gdt();
+	kprintf("%x\n",&gdt_arr[5]);
+	kprintf("%x\n",sizeof(struct gdt));
+	write_tss(&gdt_arr[5]);
+
 }

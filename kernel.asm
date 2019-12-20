@@ -181,7 +181,7 @@ haltloop:
 start:
 	cli 				;block interrupts
 	lgdt [gdt_descr]
-	mov esp, 0x1f0000
+	mov esp, 0x180000
 	push ebx
 	push eax
 	call kmain

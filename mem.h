@@ -11,6 +11,7 @@
 #define TASKPGDIR 0xbf4000000
 #define UTOP 0xbf000000
 #define USTACK 0xb0000000
+#define KSTACK 0xc01f0000
 
 struct pte{
 	union{

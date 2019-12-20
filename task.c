@@ -1,5 +1,6 @@
 #include "task.h"
 #include "mem.h"
+#include "util.h"
 struct task *tasklist = 0;
 struct task *current_task = 0;
 struct task *freetasklist;
@@ -59,12 +60,12 @@ unsigned int gen_new_tasks(struct task **store, unsigned int parent_id){
 	t->parent_id = parent_id;
 	t->status = TASK_READY;
 
-	memset(&t->tss,0,sizeof(t->tss));
+	kmemset((char *)&t->tss,0,sizeof(t->tss));
 
 	*store = t;
 	return 0;
 }
 
 void map_region(struct task *t, void *va, unsigned int len){
-	
+
 }

@@ -90,7 +90,6 @@ void test_mem(multiboot_info *info,unsigned int print){
 
 
 	for(memory_map *mmap = (memory_map *)info -> mmap_addr; (unsigned int)mmap < (info -> mmap_addr + info -> mmap_length); mmap++){
-		
 		if(print)kprintf("range %x %x, type %d\n",mmap -> base_addr_low, mmap -> length_low, mmap -> type);
 		if(mmap -> base_addr_low == 0x100000){
 			ext_max = mmap -> base_addr_low + mmap->length_low;
@@ -113,11 +112,7 @@ void kmain(unsigned long magic,multiboot_info *info)
 	mem_init();
 	enable_paging();
 	paging_enabled = 1;
-	kprintf("%x\n",check_gdt());
 	task_init();
-
-	char *a = (char *)FRAMELIST_VA;
-	*a = 0xdeadbeef;
 
 	interactive();
 }
