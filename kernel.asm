@@ -40,6 +40,7 @@ global enable_paging
 global haltloop
 global read_eflags
 global load_master_pde
+global do_jump_user_function
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -168,6 +169,31 @@ timer_handler:
 	call    timer_handler_main
 	popa
 	iretd
+
+do_jump_user_function:
+	push 0
+	push 0
+	push 0
+	push 0
+	push 0
+	push 0
+	push 0
+	push 0
+	popad
+	mov ax,0x23
+	mov ds,ax
+	mov es,ax
+	mov edx, [esp + 4]
+	push 0x23
+	push eax
+	push edx
+	mov edx, [esp + 20] ;(esp + 8) + (12)
+	pushf
+	push 0x1b
+	push edx
+	xor edx, edx
+	iretd
+
 
 enable_paging:
 	mov eax,0x1ff000

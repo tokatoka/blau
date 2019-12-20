@@ -10,6 +10,8 @@ struct task *freetasklist;
 extern struct pde *master_pde;
 char ids[256];
 extern void load_master_pde();
+extern void do_jump_user_function(unsigned int, unsigned int);
+
 
 void task_init(){
 	freetasklist = 0;
@@ -114,16 +116,12 @@ unsigned int gen_task(void *bin){
 				panic();
 			}
 			map_region(thistask,(void *)ph_start->p_vaddr,ph_start->p_memsz);
-			kprintf("???\n");
 			char *test = (char *)0x800020;
 			*test = 'a';
-			kprintf("???\n");
 			kmemcpy(ph_start->p_vaddr, (char *)bin + ph_start->p_offset, ph_start->p_filesz);
-			kprintf("???\n");
 			kmemset((void *)ph_start -> p_vaddr + ph_start->p_filesz, 0, ph_start->p_memsz - ph_start->p_filesz);
 		}
 	}
-	kprintf("???\n");
 	lcr3(master_pde);
 	thistask->tss.eip = (unsigned int)elfhdr->e_entry;
 	map_region(thistask,(void *)USTACK-PGSIZE,PGSIZE);
@@ -135,25 +133,5 @@ void *id2task(unsigned int id){
 }
 void jump_user_function(struct task *t){
 	lcr3(paddr(t->pgdir));
-	__asm__ volatile(
-		".intel_syntax noprefix\n"
-		"push 0\n"
-		"push 0\n"
-		"push 0\n"
-		"push 0\n"
-		"push 0\n"
-		"push 0\n"
-		"push 0\n"
-		"popa\n"
-		"mov ax,0x23\n"
-		"mov ds,ax\n"
-		"mov es,ax\n"
-		"push 0x23\n"
-		"push eax\n"
-		"push 0xafffff00\n"
-		"pushf\n"
-		"push 0x1b\n"
-		"push 0x800020\n"
-		"iret\n"
-		);
+	do_jump_user_function(t->tss.esp,t->tss.eip);
 }
