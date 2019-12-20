@@ -140,9 +140,15 @@ void idt_init(void)
 
 
 	load_idt(idt_ptr);
-	struct gdt* gdt_arr= (struct gdt *)check_gdt();
-	kprintf("%x\n",&gdt_arr[5]);
-	kprintf("%x\n",sizeof(struct gdt));
-	write_tss(&gdt_arr[5]);
 
+	__asm__ volatile("movw %%ax,%%gs" :: "a" (0x20|3));
+	__asm__ volatile("movw %%ax,%%fs" :: "a" (0x20|3));
+	__asm__ volatile("movw %%ax,%%es" :: "a" (0x10));
+	__asm__ volatile("movw %%ax,%%ds" :: "a" (0x10));
+	__asm__ volatile("movw %%ax,%%ss" :: "a" (0x10));
+	__asm__ volatile("ljmp %0,$1f\n 1:\n" :: "i" (0x08));
+
+	lldt(0);
+	struct gdt* gdt_arr= (struct gdt *)check_gdt();
+	write_tss(&gdt_arr[5]);
 }

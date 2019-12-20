@@ -67,5 +67,6 @@ void *pp2kva(struct physpage *pp);
 void boot_map_region(struct pde *root, void * va, unsigned int size, void *pa, int rw,int us);
 unsigned int va2pa(struct pde *root,void *va);
 unsigned int pde_idx(void *va);
+int page_insert(struct pde *root, struct physpage* pp, void *va, int rw,int us);
 void *paddr(void *va);
 #endif

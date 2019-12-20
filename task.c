@@ -1,6 +1,8 @@
 #include "task.h"
 #include "mem.h"
 #include "util.h"
+#include "io.h"
+#include "cpu.h"
 struct task *tasklist = 0;
 struct task *current_task = 0;
 struct task *freetasklist;
@@ -36,7 +38,7 @@ unsigned int gen_new_tasks(struct task **store, unsigned int parent_id){
 	}
 	struct task *t = freetasklist;
 	freetasklist = t -> next;
-
+	*store = t;
 
 	struct physpage *pp = page_alloc(1);
 	if(pp == 0){
@@ -62,10 +64,30 @@ unsigned int gen_new_tasks(struct task **store, unsigned int parent_id){
 
 	kmemset((char *)&t->tss,0,sizeof(t->tss));
 
-	*store = t;
+
+	t -> tss.es = 0x20 | 3;
+	t -> tss.ss = 0x20 | 3;
+	t -> tss.cs = 0x18 | 3;
+	t -> tss.ds = 0x20 | 3;
+	t -> tss.esp = USTACK;
+	t -> tss.eflags |= 0x200; //allow interrupt
 	return 0;
 }
 
 void map_region(struct task *t, void *va, unsigned int len){
+	void *start = (void *)rounddown((unsigned int)va, PGSIZE);
+	void *end = (void *)roundup((unsigned int)va + len, PGSIZE);
 
+	for(void *i = start; i < end; i+= PGSIZE){
+		struct physpage *pp = page_alloc(0);
+		if(pp == 0){
+			kprintf("mapping failed\n");
+			panic();
+		}
+		unsigned int ret = page_insert(t->pgdir,pp,(void *)i,0,1);
+		if(ret != 0){
+			kprintf("mapping failed\n");
+			panic();
+		}
+	}
 }

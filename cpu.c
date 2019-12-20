@@ -6,6 +6,7 @@
 
 extern void read_gdt(char *);
 extern void haltloop();
+extern unsigned int read_eflags();
 struct tss master_tss;
 
 
@@ -16,6 +17,11 @@ void invlpg(void *va){
 void ltr(unsigned short sel)
 {
 	__asm__ volatile("ltr %0" : : "r" (sel));
+}
+
+void lldt(unsigned short sel)
+{
+	__asm__ volatile("lldt %0" : : "r" (sel));
 }
 
 void write_tss(struct gdt *g){
@@ -46,10 +52,16 @@ void write_tss(struct gdt *g){
 	ltr(0x2b);
 }
 
-unsigned int check_gdt(){
+void *check_gdt(){
 	char a = 0;
 	read_gdt((char *)&a);
-	return *(unsigned int *)(&a + 2);
+	return (void *)*(unsigned int *)(&a + 2);
+}
+
+unsigned int check_eflags(){
+	unsigned int a;
+	a = read_eflags();
+	return a;
 }
 
 void panic(){

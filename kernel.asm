@@ -38,6 +38,7 @@ global SIMDERR_handler
 global ALIGN_handler
 global enable_paging
 global haltloop
+global read_eflags
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -63,6 +64,11 @@ load_idt:
 	mov edx, [esp + 4]
 	lidt [edx]
 	sti 				;turn on interrupts
+	ret
+
+read_eflags:
+	pushf
+	pop eax
 	ret
 
 read_gdt:
