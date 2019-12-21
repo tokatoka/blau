@@ -95,14 +95,9 @@ NMI_handler:
 	iret
 
 BPKPT_handler:
-	pusha
 	push 0
 	push 3
 	jmp push_tf_and_jump
-	pop eax
-	pop eax
-	popa
-	iret
 
 OVLOW_handler:
 	jmp OVLOW_handler
@@ -167,14 +162,9 @@ SIMDERR_handler:
 	iret
 
 syscall_handler:
-	pusha
 	push 0
 	push 0x80
 	jmp push_tf_and_jump
-	pop eax
-	pop eax
-	popa
-	iret
 
 
 keyboard_handler:
@@ -202,6 +192,7 @@ push_tf_and_jump:
 	popa
 	pop es
 	pop ds
+	jmp haltloop
 
 do_jump_user_function:
 	push 0

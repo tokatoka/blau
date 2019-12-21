@@ -115,7 +115,7 @@ void kmain(unsigned long magic,multiboot_info *info)
 	task_init();
 
 	unsigned int id = 0;
-	GEN_TASK(syscall,id);
+	GEN_TASK(brkpt,id);
 	kprintf("test task generated!\n");
 	jump_user_function(id2task(id));
 	interactive();
