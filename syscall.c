@@ -7,7 +7,7 @@ enum{
 };
 
 
-unsigned int syscall_handler_main(unsigned int syscall_number,unsigned int erst,unsigned int zweit, unsigned int dritt, unsigned int viert){
+unsigned int syscall_handler_main(unsigned int syscall_number,unsigned int erst,unsigned int zweit, unsigned int dritt, unsigned int viert,unsigned int fuenft){
 	switch(syscall_number){
 		case SYSCALL_get_taskid:
 		case SYSCALL_getc:

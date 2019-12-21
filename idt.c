@@ -2,6 +2,7 @@
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
 
 #define INTERRUPT_GATE_DPL0 0x8e
+#define INTERRUPT_GATE_DPL3 0xee
 #define TRAP_GATE_DPL0 0x8f
 
 #define IOADR_PIT_COUNTER0	0x0040
@@ -53,7 +54,7 @@ extern void FPERR_handler(void);
 extern void ALIGN_handler(void);
 extern void MCHK_handler(void);
 extern void SIMDERR_handler(void);
-
+extern void syscall_handler(void);
 
 
 
@@ -77,7 +78,7 @@ void idt_init(void)
 	set_idtdesc(0, DIVIDE_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
 	set_idtdesc(1, DEBUG_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
 	set_idtdesc(2, NMI_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
-	set_idtdesc(3, BPKPT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
+	set_idtdesc(3, BPKPT_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL3);
 	set_idtdesc(4, OVLOW_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
 	set_idtdesc(5, BOUND_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
 	set_idtdesc(6, ILLOP_handler, KERNEL_CODE_SEGMENT_OFFSET, INTERRUPT_GATE_DPL0);
@@ -98,6 +99,8 @@ void idt_init(void)
 
 	set_idtdesc(0x20,timer_handler,KERNEL_CODE_SEGMENT_OFFSET,INTERRUPT_GATE_DPL0);
 	set_idtdesc(0x21,keyboard_handler,KERNEL_CODE_SEGMENT_OFFSET,INTERRUPT_GATE_DPL0);
+
+	set_idtdesc(0x80,syscall_handler,KERNEL_CODE_SEGMENT_OFFSET,INTERRUPT_GATE_DPL3);
 
 	timer_init();
 

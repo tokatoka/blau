@@ -57,14 +57,14 @@ unsigned int setup_new_tasks(struct task **store, unsigned int parent_id){
 	t->parent_id = parent_id;
 	t->status = TASK_READY;
 
-	kmemset((char *)&t->tss,0,sizeof(t->tss));
+	kmemset((char *)&t->tf,0,sizeof(t->tf));
 
-	t -> tss.es = 0x20 | 3;
-	t -> tss.ss = 0x20 | 3;
-	t -> tss.cs = 0x18 | 3;
-	t -> tss.ds = 0x20 | 3;
-	t -> tss.esp = USTACK;
-	t -> tss.eflags |= 0x200; //allow interrupt
+	t -> tf.es = 0x20 | 3;
+	t -> tf.ss = 0x20 | 3;
+	t -> tf.cs = 0x18 | 3;
+	t -> tf.ds = 0x20 | 3;
+	t -> tf.esp = USTACK - 0x100;
+	t -> tf.eflags |= 0x200; //allow interrupt
 	return 0;
 }
 
@@ -123,7 +123,7 @@ unsigned int gen_task(void *bin){
 		}
 	}
 	lcr3(master_pde);
-	thistask->tss.eip = (unsigned int)elfhdr->e_entry;
+	thistask->tf.eip = (unsigned int)elfhdr->e_entry;
 	map_region(thistask,(void *)USTACK-PGSIZE,PGSIZE);
 	return thistask->id;
 }
@@ -133,5 +133,5 @@ void *id2task(unsigned int id){
 }
 void jump_user_function(struct task *t){
 	lcr3(paddr(t->pgdir));
-	do_jump_user_function(t->tss.esp,t->tss.eip);
+	do_jump_user_function(t->tf.esp,t->tf.eip);
 }

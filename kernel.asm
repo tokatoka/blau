@@ -41,6 +41,7 @@ global haltloop
 global read_eflags
 global load_master_pde
 global do_jump_user_function
+global syscall_handler
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -49,6 +50,7 @@ extern kernel_panic
 extern DBLFLT_handler_main
 extern PGFLT_handler_main
 extern panic
+extern trap_handler_main
 
 read_port:
 	mov edx, [esp + 4]
@@ -93,7 +95,13 @@ NMI_handler:
 	iret
 
 BPKPT_handler:
-	jmp BPKPT_handler
+	pusha
+	push 0
+	push 3
+	jmp push_tf_and_jump
+	pop eax
+	pop eax
+	popa
 	iret
 
 OVLOW_handler:
@@ -135,12 +143,12 @@ GPFLT_handler:
 	iret
 
 PGFLT_handler:
-	pusha
-	mov eax, cr2
-	push eax
-	call PGFLT_handler_main
-	popa
-	iret
+    pusha
+    mov eax, cr2
+    push eax
+    call PGFLT_handler_main
+    popa
+    iret
 
 FPERR_handler:
 	jmp FPERR_handler
@@ -158,6 +166,17 @@ SIMDERR_handler:
 	jmp SIMDERR_handler
 	iret
 
+syscall_handler:
+	pusha
+	push 0
+	push 0x80
+	jmp push_tf_and_jump
+	pop eax
+	pop eax
+	popa
+	iret
+
+
 keyboard_handler:
 	pusha
 	call    keyboard_handler_main
@@ -169,6 +188,20 @@ timer_handler:
 	call    timer_handler_main
 	popa
 	iretd
+
+push_tf_and_jump:
+	push ds
+	push es
+	pusha
+	push 0x10
+	pop ds
+	push 0x10
+	pop es
+	push esp
+	call trap_handler_main
+	popa
+	pop es
+	pop ds
 
 do_jump_user_function:
 	push 0
