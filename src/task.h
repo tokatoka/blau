@@ -100,4 +100,5 @@ void task_init();
 void *id2task(unsigned int);
 unsigned int gen_task(void *bin);
 void jump_user_function();
+void run_task(struct task *t);
 #endif

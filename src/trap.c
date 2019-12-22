@@ -32,11 +32,11 @@ void trap_handler_main(struct trapframe *esp){
 			panic();
 		}
 		kprintf("inside syscall handler!");
-		panic();
 		syscall_handler_main(tf->eax,tf->ebx,tf->ecx,tf->edx,tf->esi,tf->edi);
+		panic();
 	}
 	if(tf -> trapno == 0x3){
-		kprintf("inside brkpt handler");
+		kprintf("hit brkpt. kernel halts\n");
 		panic();
 	}
 }

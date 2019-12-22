@@ -8,7 +8,6 @@ struct task *tasklist = 0;
 struct task *current_task = 0;
 struct task *freetasklist;
 extern struct pde *master_pde;
-char ids[256];
 extern void load_master_pde();
 extern void do_jump_user_function(unsigned int, unsigned int);
 
@@ -23,7 +22,7 @@ void task_init(){
 	}
 }
 
-unsigned int setup_new_tasks(struct task **store, unsigned int parent_id){
+unsigned int setup_task(struct task **store, unsigned int parent_id){
 
 	if(freetasklist == 0){
 		return -1;
@@ -87,7 +86,7 @@ void map_region(struct task *t, void *va, unsigned int len){
 
 unsigned int gen_task(void *bin){
 	struct task *thistask;
-	unsigned int ret = setup_new_tasks(&thistask,0);
+	unsigned int ret = setup_task(&thistask,0);
 	if(ret != 0){
 		kprintf("gen_task failed\n");
 		panic();
@@ -131,6 +130,22 @@ unsigned int gen_task(void *bin){
 void *id2task(unsigned int id){
 	return &tasklist[id];
 }
+
+void run_task(struct task *t){
+       if(t == 0){
+               kprintf("invalid task specified\n");
+       }
+       if(current_task != t && current_task != 0){
+               if(current_task->status == TASK_RUNNING){
+                       current_task->status = TASK_READY;
+               }
+       }
+       current_task = t;
+       current_task->status = TASK_RUNNING;
+       jump_user_function(t);
+}
+
+
 void jump_user_function(struct task *t){
 	lcr3(paddr(t->pgdir));
 	do_jump_user_function(t->tf.esp,t->tf.eip);
