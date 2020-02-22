@@ -138,7 +138,6 @@ GPFLT_handler:
 	iret
 
 PGFLT_handler:
-	push 0
 	push 13
 	jmp push_tf_and_jump
 
@@ -165,10 +164,9 @@ syscall_handler:
 
 
 keyboard_handler:
-	pusha
-	call    keyboard_handler_main
-	popa
-	iretd
+	push 0
+	push 0x21
+	jmp push_tf_and_jump
 
 timer_handler:
 	pusha

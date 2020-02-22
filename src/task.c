@@ -26,7 +26,6 @@ void task_init(){
 }
 
 unsigned int setup_task(struct task **store, unsigned int parent_id){
-
 	if(freetasklist == 0){
 		return -1;
 	}

@@ -57,6 +57,14 @@ void write_tss(struct gdt *g){
 	ltr(0x2b);
 }
 
+unsigned int rcr2(void)
+{
+	unsigned int val;
+	__asm__ volatile("movl %%cr2,%0" : "=r" (val));
+	return val;
+}
+
+
 void *check_gdt(){
 	char a = 0;
 	read_gdt((char *)&a);

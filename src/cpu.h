@@ -28,6 +28,7 @@ void invlpg(void *va);
 void write_tss();
 void lcr3(void *val);
 void lldt(unsigned short);
+unsigned int rcr2(void);
 unsigned int check_eflags();
 
 #endif

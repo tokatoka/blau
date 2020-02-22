@@ -39,9 +39,10 @@ void trap_handler_main(struct trapframe *esp){
 	}
 	if(tf -> trapno == 0xd){
 		print_tf(esp);
-		kprintf("pgfault\n");
+		kprintf("pgfault at %x\n",rcr2());
 		panic();
 	}
+
 	kprintf("trap unhandled\n");
 	panic();
 }
