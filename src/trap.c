@@ -23,21 +23,27 @@ void print_tf(struct trapframe *tf){
 
 void trap_handler_main(struct trapframe *esp){
 	struct trapframe *tf = esp;
-	print_tf(tf);
-
 	if(tf -> trapno == 0x80){
 		if(tf -> cs != 0x1b){
 			kprintf("%x\n",tf -> cs);
 			kprintf("syscall not from ring3\n");
 			panic();
 		}
-		kprintf("inside syscall handler!");
+		kprintf("inside syscall handler!\n");
 		syscall_handler_main(tf->eax,tf->ebx,tf->ecx,tf->edx,tf->esi,tf->edi);
 		panic();
 	}
 	if(tf -> trapno == 0x3){
+		print_tf(esp);
 		kprintf("hit brkpt. kernel halts\n");
 		panic();
 	}
+	if(tf -> trapno == 0xd){
+		print_tf(esp);
+		kprintf("pgfault\n");
+		panic();
+	}
+	kprintf("trap unhandled\n");
+	panic();
 }
 

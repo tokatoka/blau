@@ -4,10 +4,13 @@
 #include "io.h"
 #include "cpu.h"
 #include "elf.h"
+#include "sched.h"
+
 struct task *tasklist = 0;
 struct task *current_task = 0;
 struct task *freetasklist;
 extern struct pde *master_pde;
+extern unsigned int paging_enabled;
 extern void load_master_pde();
 extern void do_jump_user_function(unsigned int, unsigned int);
 
@@ -116,7 +119,6 @@ unsigned int gen_task(void *bin){
 			}
 			map_region(thistask,(void *)ph_start->p_vaddr,ph_start->p_memsz);
 			char *test = (char *)0x800020;
-			*test = 'a';
 			kmemcpy(ph_start->p_vaddr, (char *)bin + ph_start->p_offset, ph_start->p_filesz);
 			kmemset((void *)ph_start -> p_vaddr + ph_start->p_filesz, 0, ph_start->p_memsz - ph_start->p_filesz);
 		}
@@ -130,6 +132,33 @@ unsigned int gen_task(void *bin){
 void *id2task(unsigned int id){
 	return &tasklist[id];
 }
+
+void task_destroy(struct task *t){
+	lcr3(master_pde);
+	for(unsigned int i = 0; i < pde_idx((void *)UTOP); i++){
+		if(!(t -> pgdir[i].present = 1)){
+			continue;
+		}
+		struct pte *victim_pte;
+		victim_pte = (void *)(t->pgdir[i].off*PGSIZE);
+		if(paging_enabled){
+			victim_pte = kaddr(victim_pte);
+		}
+		for(unsigned int j = 0; j < 1024; j++){
+			if(victim_pte->present == 1){
+				page_remove(t->pgdir,(void *)pgaddr(i,j,0));
+			}
+		}
+		t -> pgdir[i].all = 0;
+		kprintf("victim_pte %x\n",victim_pte);
+		page_decref(pa2pp((void *)victim_pte));
+	}
+	if(t == current_task){
+		current_task = 0;
+		schedule();
+	}
+}
+
 
 void run_task(struct task *t){
        if(t == 0){

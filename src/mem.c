@@ -30,6 +30,10 @@ unsigned int pte_idx(void *va){
 	return ((unsigned int)va >> 12) & 0x3ff;
 }
 
+void *pgaddr(unsigned int pdx, unsigned int ptx, unsigned int off){
+	return (void *)((pdx << 22) | (ptx << 12) | off);
+}
+
 void *pp2pa(struct physpage *pp){
 	return (void *)((pp - framelist) * 0x1000);
 }
@@ -150,6 +154,7 @@ void page_free(struct physpage *pp){
 }
 
 void page_decref(struct physpage *pp){
+	kprintf("%x\n",pp);
 	if(pp -> use == 0){
 		kprintf("invalid decrement! \n");
 		panic();

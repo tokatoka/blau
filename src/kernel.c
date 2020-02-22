@@ -113,7 +113,6 @@ void kmain(unsigned long magic,multiboot_info *info)
 	enable_paging();
 	paging_enabled = 1;
 	task_init();
-
 	unsigned int id = 0;
 	GEN_TASK(syscall,id);
 	kprintf("test task generated!\n");

@@ -52,30 +52,6 @@ struct tss {
 	unsigned short io;
 };
 
-struct trapframe{
-	unsigned int edi;
-	unsigned int esi;
-	unsigned int ebp;
-	unsigned int oesp;
-	unsigned int ebx;
-	unsigned int edx;
-	unsigned int ecx;
-	unsigned int eax;
-	unsigned short es;
-	unsigned short pad0;
-	unsigned short ds;
-	unsigned short pad1;
-	unsigned int trapno;
-	unsigned int errcode;
-	unsigned int eip;
-	unsigned short cs;
-	unsigned short pad2;
-	unsigned int eflags;
-	unsigned int esp;
-	unsigned short ss;
-	unsigned short pad3;
-};
-
 struct task{
 	struct trapframe tf;
 	struct task *next;
@@ -100,5 +76,6 @@ void task_init();
 void *id2task(unsigned int);
 unsigned int gen_task(void *bin);
 void jump_user_function();
+void task_destroy(struct task *t);
 void run_task(struct task *t);
 #endif

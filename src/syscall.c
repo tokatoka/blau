@@ -8,6 +8,7 @@ enum{
 	SYSCALL_putc,
 	SYSCALL_exit,
 	SYSCALL_uptime,
+	SYSCALL_getpid,
 };
 
 
@@ -19,10 +20,19 @@ unsigned int syscall_handler_main(unsigned int syscall_number,unsigned int erst,
 		case SYSCALL_getc:
 		case SYSCALL_putc:
 			kprintf("%x\n",erst);
+			kprintf("%x\n",zweit);
+			kprintf("%x\n",dritt);
+			kprintf("%x\n",syscall_number);
 			return 0;
 			break;
 		case SYSCALL_exit:
+			task_destroy(current_task);
+			break;
 		case SYSCALL_uptime:
+			break;
+		case SYSCALL_getpid:
+
+			break;
 		default:
 			return -1;
 	}

@@ -23,6 +23,7 @@ struct gdt{
 
 void *check_gdt();
 void panic();
+void brkpt();
 void invlpg(void *va);
 void write_tss();
 void lcr3(void *val);

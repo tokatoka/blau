@@ -138,12 +138,9 @@ GPFLT_handler:
 	iret
 
 PGFLT_handler:
-    pusha
-    mov eax, cr2
-    push eax
-    call PGFLT_handler_main
-    popa
-    iret
+	push 0
+	push 13
+	jmp push_tf_and_jump
 
 FPERR_handler:
 	jmp FPERR_handler

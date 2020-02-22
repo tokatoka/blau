@@ -69,6 +69,13 @@ unsigned int check_eflags(){
 	return a;
 }
 
+void brkpt(){
+	__asm__ volatile("int %0\n"
+		     :
+		     : "i" (0x3)
+		     : "cc");
+}
+
 void panic(){
 	kprintf("kernel panic!");
 	haltloop();
