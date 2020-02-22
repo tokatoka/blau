@@ -29,7 +29,6 @@ void trap_handler_main(struct trapframe *esp){
 			kprintf("syscall not from ring3\n");
 			panic();
 		}
-		kprintf("inside syscall handler!\n");
 		syscall_handler_main(tf->eax,tf->ebx,tf->ecx,tf->edx,tf->esi,tf->edi);
 		panic();
 	}

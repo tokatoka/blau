@@ -81,8 +81,8 @@ void mem_init(){
 	next_free = (void *)0x200000;
 	freeframelist=0;
 	framelist = (struct physpage *)alloc_mem((ext_max/0x1000) * sizeof(struct physpage));
-	tasklist = (struct task *)alloc_mem(MAX_TASKS * sizeof(struct task));
 
+	tasklist = (struct task *)alloc_mem(MAX_TASKS * sizeof(struct task));
 
 	for(int i = 0; i < ext_max / PGSIZE ;i++){
 		if(i < 0xa0000 / PGSIZE){
@@ -154,7 +154,6 @@ void page_free(struct physpage *pp){
 }
 
 void page_decref(struct physpage *pp){
-	kprintf("%x\n",pp);
 	if(pp -> use == 0){
 		kprintf("invalid decrement! \n");
 		panic();

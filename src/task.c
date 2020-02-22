@@ -136,13 +136,14 @@ void *id2task(unsigned int id){
 void task_destroy(struct task *t){
 	lcr3(master_pde);
 	for(unsigned int i = 0; i < pde_idx((void *)UTOP); i++){
-		if(!(t -> pgdir[i].present = 1)){
+		if(!(t -> pgdir[i].present == 1)){
 			continue;
 		}
 		struct pte *victim_pte;
-		victim_pte = (void *)(t->pgdir[i].off*PGSIZE);
+		void *pte_pa;
+		pte_pa = (void *)(t->pgdir[i].off*PGSIZE);
 		if(paging_enabled){
-			victim_pte = kaddr(victim_pte);
+			victim_pte = kaddr(pte_pa);
 		}
 		for(unsigned int j = 0; j < 1024; j++){
 			if(victim_pte->present == 1){
@@ -150,13 +151,19 @@ void task_destroy(struct task *t){
 			}
 		}
 		t -> pgdir[i].all = 0;
-		kprintf("victim_pte %x\n",victim_pte);
-		page_decref(pa2pp((void *)victim_pte));
+		page_decref(pa2pp((void *)pte_pa));
 	}
+	void *pa = paddr(t -> pgdir);
+	t -> pgdir = 0;
+	page_decref(pa2pp(pa));
+	t -> status = TASK_EMPTY;
+	t -> next = freetasklist;
+	freetasklist = t;
 	if(t == current_task){
 		current_task = 0;
 		schedule();
 	}
+
 }
 
 
