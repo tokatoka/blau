@@ -1,7 +1,10 @@
 #include "task.h"
 #include "cpu.h"
+#include "assert.h"
+#include "io.h"
 extern struct task* current_task;
 extern struct task* tasklist;
+extern struct pde *master_pde;
 void schedule(){
 	unsigned id = 0;
 	if(current_task != 0){
@@ -17,8 +20,20 @@ void schedule(){
 			run_task(&tasklist[i]);
 		}
 	}
-	while(1){
-		//halt
-	}
+	//halt
+
+	assert(current_task == 0);
+	lcr3(master_pde);
+	__asm__ volatile("movl $0, %%ebp\n"
+					 "movl %0, %%esp\n"
+					 "pushl $0\n"
+					 "pushl $0\n"
+					 "sti\n"
+					 "1:\n"
+					 "hlt\n"
+					 "jmp 1b\n"
+				: : "a" (KSTACK)
+		);
+
 	panic("no task available!\n");
 }

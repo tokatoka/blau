@@ -2,6 +2,10 @@
 #include "io.h"
 #include "syscall.h"
 #include "cpu.h"
+#include "assert.h"
+#include "sched.h"
+
+extern struct task* current_task;
 void print_tf(struct trapframe *tf){
 	kprintf("tf -> edi : %x\n", tf -> edi);
 	kprintf("tf -> esi : %x\n", tf -> esi);
@@ -22,7 +26,19 @@ void print_tf(struct trapframe *tf){
 }
 
 void trap_handler_main(struct trapframe *esp){
+	assert(!(check_eflags() & 0x200));
 	struct trapframe *tf = esp;
+
+	if((tf -> cs & 3) == 3){
+		if(current_task->status == TASK_ZOMBIE){
+			task_destroy(current_task);
+			current_task = 0;
+			schedule();
+		}
+		current_task -> tf = *tf;
+		tf = &current_task -> tf;
+	}
+
 	if(tf -> trapno == 0x80){
 		if(tf -> cs != 0x1b){
 			kprintf("%x\n",tf -> cs);
@@ -42,8 +58,19 @@ void trap_handler_main(struct trapframe *esp){
 		kprintf("pgfault at %x\n",rcr2());
 		panic();
 	}
-
-	kprintf("trap unhandled\n");
-	panic();
+	if(tf -> trapno == 0x21){
+		keyboard_handler_main();
+	}
+	else{
+		print_tf(esp);
+		kprintf("trap unhandled\n");
+		panic();
+	}
+	if(current_task && current_task -> status == TASK_RUNNING){
+		run_task(current_task);
+	}
+	else{
+		schedule();
+	}
 }
 

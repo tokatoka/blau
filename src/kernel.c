@@ -46,6 +46,7 @@ void timer_handler_main(void){
 
 void keyboard_handler_main(void)
 {
+	kprintf("keyboard handler called\n");
 	unsigned char status;
 	char keycode;
 
@@ -110,15 +111,11 @@ void kmain(unsigned long magic,multiboot_info *info)
 	idt_init();
 	allow_intr();
 	mem_init();
-
 	enable_paging();
-
 	paging_enabled = 1;
 	task_init();
 	unsigned int id = 0;
 	GEN_TASK(syscall,id);
-
-	kprintf("test task generated!\n");
 	run_task(id2task(id));
 	interactive();
 }

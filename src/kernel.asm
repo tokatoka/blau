@@ -162,7 +162,6 @@ syscall_handler:
 	push 0x80
 	jmp push_tf_and_jump
 
-
 keyboard_handler:
 	push 0
 	push 0x21
