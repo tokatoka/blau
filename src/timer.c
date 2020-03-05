@@ -2,6 +2,7 @@
 
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
+extern unsigned int tick;
 
 void timer_init(void)
 {
@@ -10,4 +11,9 @@ void timer_init(void)
            | IOADR_PIT_CONTROL_WORD_BIT_MODE2, IOADR_PIT_CONTROL_WORD);
     write_port(0x9c, IOADR_PIT_COUNTER0);
     write_port(0x2e, IOADR_PIT_COUNTER0);
+}
+
+void timer_handler_main(void){
+	write_port(0x20, 0x20);
+	tick++;
 }

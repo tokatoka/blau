@@ -4,9 +4,9 @@ CFLAGS=-m32 -fno-pie -no-pie -fno-builtin -static -fno-omit-frame-pointer -nostd
 AS=nasm
 ASFLAGS=-f elf32
 PROGRAM=blau
-KERN_SRCS=src/cpu.c src/fifo.c src/idt.c src/io.c src/kernel.c src/mem.c src/syscall.c src/task.c src/timer.c src/trap.c src/util.c src/sched.c
+KERN_SRCS=src/cpu.c src/fifo.c src/idt.c src/io.c src/kernel.c src/mem.c src/syscall.c src/task.c src/timer.c src/trap.c src/util.c src/sched.c src/keyboard.c
 KERN_ASM_SRCS=src/kernel.asm
-KERN_OBJS=src/cpu.o src/fifo.o src/idt.o src/io.o src/kernel.o src/mem.o src/syscall.o src/task.o src/timer.o src/trap.o src/util.o src/sched.o
+KERN_OBJS=src/cpu.o src/fifo.o src/idt.o src/io.o src/kernel.o src/mem.o src/syscall.o src/task.o src/timer.o src/trap.o src/util.o src/sched.o src/keyboard.o
 KERN_ASM_OBJS=src/kasm.o
 KERN_ASM_OBJS=src/kasm.o
 

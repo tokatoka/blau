@@ -1,5 +1,7 @@
 #ifndef BLAU_KEYBOARD_H
 #define BLAU_KEYBOARD_H
+
+
 unsigned char keyboard_map[128] =
 {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
@@ -39,4 +41,6 @@ unsigned char keyboard_map[128] =
     0,	/* F12 Key */
     0,	/* All other keys are undefined */
 };
+
+void keyboard_handler_main(void);
 #endif

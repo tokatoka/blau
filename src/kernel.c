@@ -8,8 +8,7 @@
 #include "util.h"
 #include "cpu.h"
 
-#define KEYBOARD_DATA_PORT 0x60
-#define KEYBOARD_STATUS_PORT 0x64
+
 #define IDT_SIZE 256
 #define INTERRUPT_GATE 0x8e
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
@@ -37,33 +36,6 @@ void allow_intr(void)
 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
 	write_port(0x21 , 0xFC);
 }
-
-void timer_handler_main(void){
-	write_port(0x20, 0x20);
-	tick++;
-}
-
-
-void keyboard_handler_main(void)
-{
-	kprintf("keyboard handler called\n");
-	unsigned char status;
-	char keycode;
-
-	/* write EOI */
-	write_port(0x20, 0x20);
-
-	status = read_port(KEYBOARD_STATUS_PORT);
-	/* Lowest bit of status will be set if buffer is not empty */
-	if (status & 0x01) {
-		keycode = read_port(KEYBOARD_DATA_PORT);
-		if(keycode < 0)
-			return;
-
-		push_fifo32(&iobuf,keycode);
-	}
-}
-
 
 void disable_cursor()
 {
@@ -115,7 +87,6 @@ void kmain(unsigned long magic,multiboot_info *info)
 	paging_enabled = 1;
 	task_init();
 	unsigned int id = 0;
-	GEN_TASK(syscall,id);
-	run_task(id2task(id));
+	GEN_AND_RUN_TASK(syscall);
 	interactive();
 }

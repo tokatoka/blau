@@ -71,6 +71,13 @@ struct task{
 		id = gen_task(PASTE3(_binary_user_, x, _o_start));					\
 	} while (0)
 
+#define GEN_AND_RUN_TASK(x)						\
+	do {								\
+		extern char PASTE3(_binary_user_, x, _o_start)[];	\
+		unsigned int id = gen_task(PASTE3(_binary_user_, x, _o_start));					\
+		run_task(id2task(id));	\
+	} while (0)
+
 
 void task_init();
 void *id2task(unsigned int);
