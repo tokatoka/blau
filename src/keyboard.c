@@ -64,7 +64,7 @@ void keyboard_handler_main(void)
 		keycode = read_port(KEYBOARD_DATA_PORT);
 		if(keycode < 0)
 			return;
-
+		kprint("aaaaaaaaaaaaaaaaaaaa");
 		push_fifo32(&iobuf,keycode);
 	}
 }

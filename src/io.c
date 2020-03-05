@@ -4,6 +4,7 @@
 #define SCREENSIZE BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE * LINES
 #include "fifo.h"
 #include "keyboard.h"
+#include "util.h"
 /* current cursor location */
 unsigned int current_loc = 0;
 /* video memory begins at address 0xb8000 */
@@ -11,10 +12,21 @@ char *vidptr = (char*)0xb8000;
 extern struct fifo32 iobuf;
 extern unsigned char keyboard_map[128];
 
+void scroll(){
+	char buf[SCREENSIZE];
+	kmemcpy(buf,vidptr,SCREENSIZE);
+	kmemcpy(vidptr,buf + BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE,SCREENSIZE - BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE);
+	kmemset(vidptr + SCREENSIZE - BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE,0x0,BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE);
+	current_loc -= BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
+}
+
 void kprint_newline(void)
 {
 	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
 	current_loc = current_loc + (line_size - current_loc % (line_size));
+	if(current_loc > SCREENSIZE){
+		scroll();
+	}
 }
 
 
@@ -23,9 +35,15 @@ void kput_char(char c){
 		kprint_newline();
 	}
 	else if(c == '\t'){
+		if(current_loc > SCREENSIZE){
+			scroll();
+		}
 		current_loc += 8;
 	}
 	else{
+		if(current_loc + 2> SCREENSIZE){
+			scroll();
+		}
 		vidptr[current_loc++] = c;
 		vidptr[current_loc++] = 0x07;
 	}
