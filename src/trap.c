@@ -4,6 +4,7 @@
 #include "cpu.h"
 #include "assert.h"
 #include "sched.h"
+#include "keyboard.h"
 
 extern struct task* current_task;
 void print_tf(struct trapframe *tf){

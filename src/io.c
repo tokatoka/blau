@@ -9,6 +9,7 @@ unsigned int current_loc = 0;
 /* video memory begins at address 0xb8000 */
 char *vidptr = (char*)0xb8000;
 extern struct fifo32 iobuf;
+extern unsigned char keyboard_map[128];
 
 void kprint_newline(void)
 {

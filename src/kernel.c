@@ -16,7 +16,6 @@
 
 unsigned int tick = 0;
 unsigned int ext_max;
-extern unsigned char keyboard_map[128];
 
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
