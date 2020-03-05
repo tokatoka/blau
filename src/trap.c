@@ -39,8 +39,7 @@ void trap_handler_main(struct trapframe *esp){
 		current_task -> tf = *tf;
 		tf = &current_task -> tf;
 	}
-
-	if(tf -> trapno == 0x80){
+	else if(tf -> trapno == 0x80){
 		if(tf -> cs != 0x1b){
 			kprintf("%x\n",tf -> cs);
 			kprintf("syscall not from ring3\n");
@@ -49,17 +48,17 @@ void trap_handler_main(struct trapframe *esp){
 		syscall_handler_main(tf->eax,tf->ebx,tf->ecx,tf->edx,tf->esi,tf->edi);
 		panic();
 	}
-	if(tf -> trapno == 0x3){
+	else if(tf -> trapno == 0x3){
 		print_tf(esp);
 		kprintf("hit brkpt. kernel halts\n");
 		panic();
 	}
-	if(tf -> trapno == 0xd){
+	else if(tf -> trapno == 0xd){
 		print_tf(esp);
 		kprintf("pgfault at %x\n",rcr2());
 		panic();
 	}
-	if(tf -> trapno == 0x21){
+	else if(tf -> trapno == 0x21){
 		keyboard_handler_main();
 	}
 	else{
