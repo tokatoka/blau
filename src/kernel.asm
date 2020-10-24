@@ -163,8 +163,8 @@ syscall_handler:
 	jmp push_tf_and_jump
 
 keyboard_handler:
-	push 0
-	push 0x21
+	push 0 ;errcode
+	push 0x21 ;trapno
 	jmp push_tf_and_jump
 
 timer_handler:
@@ -189,29 +189,12 @@ push_tf_and_jump:
 	jmp haltloop
 
 do_jump_user_function:
-	push 0
-	push 0
-	push 0
-	push 0
-	push 0
-	push 0
-	push 0
-	push 0
+	mov esp, [esp + 4]
 	popad
-	mov ax,0x23
-	mov ds,ax
-	mov es,ax
-	mov edx, [esp + 4]
-	push 0x23
-	push eax
-	push edx
-	mov edx, [esp + 20] ;(esp + 8) + (12)
-	pushf
-	push 0x1b
-	push edx
-	xor edx, edx
+	pop es
+	pop ds
+	add esp, 0x8
 	iretd
-
 
 enable_paging:
 	mov eax,0x1ff000

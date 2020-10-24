@@ -1,7 +1,8 @@
 bits 32
 section .text
 global start
-extern main
+extern main, end_task
 start:
 	call main
-	hlt
+	call end_task
+	;hlt

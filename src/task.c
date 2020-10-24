@@ -12,7 +12,7 @@ struct task *freetasklist;
 extern struct pde *master_pde;
 extern unsigned int paging_enabled;
 extern void load_master_pde();
-extern void do_jump_user_function(unsigned int, unsigned int);
+extern void do_jump_user_function(struct task*);
 
 
 void task_init(){
@@ -183,5 +183,5 @@ void run_task(struct task *t){
 
 void jump_user_function(struct task *t){
 	lcr3(paddr(t->pgdir));
-	do_jump_user_function(t->tf.esp,t->tf.eip);
+	do_jump_user_function(t);
 }

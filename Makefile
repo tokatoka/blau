@@ -10,9 +10,9 @@ KERN_OBJS=src/cpu.o src/fifo.o src/idt.o src/io.o src/kernel.o src/mem.o src/sys
 KERN_ASM_OBJS=src/kasm.o
 KERN_ASM_OBJS=src/kasm.o
 
-LIB_SRCS=lib/brkpt.c lib/syscall.c
+LIB_SRCS=lib/brkpt.c lib/syscall.c lib/end_task.c
 LIB_ASM_SRCS=lib/uentry.asm
-LIB_OBJS=lib/brkpt.o lib/syscall.o
+LIB_OBJS=lib/brkpt.o lib/syscall.o lib/end_task.o
 LIB_ASM_OBJS=lib/uentry.o
 
 USER_SRCS=user/brkpt.c user/evil.c user/simple.c user/syscall.c user/interactive.c
@@ -39,7 +39,7 @@ $(USER_TMP_OBJS): %.tmp.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(USER_OBJS): %.o: %.tmp.o
-	ld -m elf_i386 -T user/user.ld -o $@ $< $(LIB_OBJS)
+	ld -m elf_i386 -T user/user.ld -o $@ $< $(LIB_ASM_OBJS) $(LIB_OBJS)
 
 $(PROGRAM) : $(KERN_ASM_OBJS) $(LIB_ASM_OBJS) $(LIB_OBJS) $(KERN_OBJS) $(USER_OBJS)
 	ld -m elf_i386 -T src/link.ld -o $(PROGRAM) $(KERN_ASM_OBJS) $(KERN_OBJS) -b binary $(USER_OBJS)
