@@ -15,9 +15,9 @@ LIB_ASM_SRCS=lib/uentry.asm
 LIB_OBJS=lib/brkpt.o lib/syscall.o
 LIB_ASM_OBJS=lib/uentry.o
 
-USER_SRCS=user/brkpt.c user/evil.c user/simple.c user/syscall.c
-USER_TMP_OBJS=user/brkpt.tmp.o user/evil.tmp.o user/simple.tmp.o user/syscall.tmp.o
-USER_OBJS=user/brkpt.o user/evil.o user/simple.o user/syscall.o
+USER_SRCS=user/brkpt.c user/evil.c user/simple.c user/syscall.c user/interactive.c
+USER_TMP_OBJS=user/brkpt.tmp.o user/evil.tmp.o user/simple.tmp.o user/syscall.tmp.o user/interactive.tmp.o
+USER_OBJS=user/brkpt.o user/evil.o user/simple.o user/syscall.o user/interactive.o
 
 .PHONY: all
 all: $(PROGRAM)

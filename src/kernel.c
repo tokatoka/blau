@@ -86,6 +86,7 @@ void kmain(unsigned long magic,multiboot_info *info)
 	paging_enabled = 1;
 	task_init();
 	unsigned int id = 0;
-	GEN_AND_RUN_TASK(syscall);
+	GEN_AND_RUN_TASK(interactive);
+	kprintn("welcome");
 	interactive();
 }

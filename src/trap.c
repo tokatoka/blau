@@ -29,7 +29,6 @@ void print_tf(struct trapframe *tf){
 void trap_handler_main(struct trapframe *esp){
 	assert(!(check_eflags() & 0x200));
 	struct trapframe *tf = esp;
-
 	if((tf -> cs & 3) == 3){
 		if(current_task->status == TASK_ZOMBIE){
 			task_destroy(current_task);
@@ -39,14 +38,14 @@ void trap_handler_main(struct trapframe *esp){
 		current_task -> tf = *tf;
 		tf = &current_task -> tf;
 	}
-	else if(tf -> trapno == 0x80){
+	if(tf -> trapno == 0x80){
 		if(tf -> cs != 0x1b){
 			kprintf("%x\n",tf -> cs);
 			kprintf("syscall not from ring3\n");
 			panic();
 		}
 		syscall_handler_main(tf->eax,tf->ebx,tf->ecx,tf->edx,tf->esi,tf->edi);
-		panic();
+		//never reaches here
 	}
 	else if(tf -> trapno == 0x3){
 		print_tf(esp);
@@ -66,6 +65,8 @@ void trap_handler_main(struct trapframe *esp){
 		kprintf("trap unhandled\n");
 		panic();
 	}
+
+
 	if(current_task && current_task -> status == TASK_RUNNING){
 		run_task(current_task);
 	}

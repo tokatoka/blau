@@ -21,7 +21,6 @@ void schedule(){
 		}
 	}
 	//halt
-
 	assert(current_task == 0);
 	lcr3(master_pde);
 	__asm__ volatile("movl $0, %%ebp\n"

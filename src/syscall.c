@@ -14,6 +14,7 @@ enum{
 
 unsigned int syscall_handler_main(unsigned int syscall_number,unsigned int erst,unsigned int zweit, unsigned int dritt, unsigned int viert,unsigned int fuenft){
 	switch(syscall_number){
+			kprintf("%x\n",syscall_number);
 		case SYSCALL_get_taskid:
             return current_task->id;
             break;
